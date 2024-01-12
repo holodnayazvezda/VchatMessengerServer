@@ -14,7 +14,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity
+@Entity(name = "vchat_text_message")
 @Getter
 @Setter
 public class Message {
