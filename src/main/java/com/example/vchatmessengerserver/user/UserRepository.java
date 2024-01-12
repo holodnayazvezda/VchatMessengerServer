@@ -25,7 +25,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "DESC LIMIT ?2 OFFSET ?3", nativeQuery = true)
     List<Long> getChatsIdsWithOffset(Long userId, int limit, int offset);
 
-    @Query(value = "SELECT COUNT(*) FROM vchat_user_chats_ids WHERE vchat_user_id = ?1", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM vchat_user_group WHERE vchat_user_id = ?1", nativeQuery = true)
     int getAmountOfChats(Long userId);
 
     @Query(value = "SELECT chats_ids " +
