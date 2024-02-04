@@ -8,14 +8,10 @@ import lombok.Setter;
 
 import java.util.Objects;
 
-@Entity(name = "vchat_channel")
+@Entity(name = "VCHAT_CHANNEL")
 @Getter
 @Setter
 public class Channel extends Group {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @NonNull
     @Column(unique = true, length = 30)
     private String nickname;

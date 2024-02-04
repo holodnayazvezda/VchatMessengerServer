@@ -4,6 +4,7 @@ package com.example.vchatmessengerserver.message;
 import com.example.vchatmessengerserver.group.Group;
 import com.example.vchatmessengerserver.user.User;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.micrometer.common.lang.NonNull;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -14,7 +15,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity(name = "vchat_text_message")
+@Entity(name = "VCHAT_TEXT_MESSAGE")
 @Getter
 @Setter
 public class Message {
@@ -28,16 +29,16 @@ public class Message {
 
     @NonNull
     @ManyToOne
+    @JsonIgnore
     private Group messageChat;
 
     @NonNull
     private ZonedDateTime creationDate;
 
-    @NonNull
-    @OneToOne
+    @ManyToOne
     private User owner;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<User> readers = new ArrayList<>();
 
     @Override

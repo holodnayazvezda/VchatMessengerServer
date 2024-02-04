@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface GroupRepository extends JpaRepository<Group, Long> {
-    @Query(value = "SELECT * FROM vchat_group WHERE (type = 1 AND LOWER(name)" +
+    @Query(value = "SELECT * FROM VCHAT_GROUP WHERE (type = 1 AND LOWER(name)" +
             " LIKE LOWER(CONCAT('%', :chatName, '%'))) OR (type = 2 AND LOWER(name) " +
             "LIKE LOWER(CONCAT('%', :chatName, '%'))) OR (type = 2 AND LOWER(nickname) " +
             "LIKE LOWER(CONCAT('%', :chatName, '%'))) ORDER BY type, id LIMIT :limit OFFSET " +

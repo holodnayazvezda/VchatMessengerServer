@@ -58,7 +58,11 @@ public class SecurityConfig {
                         "/user/exists",
                         "/user-controller/exists",
                         "/user/change_password_by_secret_words",
-                        "/user-controller/change_password_by_secret_words")
+                        "/user-controller/change_password_by_secret_words",
+                        "/user/check_secret_words",
+                        "/user-controller/check_secret_words",
+                        "/user/check_password",
+                        "/user-controller/check_password")
                         .permitAll().anyRequest().fullyAuthenticated());
         return httpSecurity.build();
     }

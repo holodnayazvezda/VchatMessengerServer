@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Entity(name = "vchat_group")
+@Entity(name = "VCHAT_GROUP")
 @Getter
 @Setter
 public class Group {
@@ -26,28 +26,26 @@ public class Group {
     @Column(length = 30)
     private String name;
 
-    private Long unreadMsgCount;
+    private Long unreadMessagesCount;
 
     private Integer type;
 
     private Integer typeOfImage;
 
-    @NonNull
-    private Long ownerId;
+    @ManyToOne
+    private User owner;
 
     @NonNull
     private ZonedDateTime creationDate;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     private List<Message> messages = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY,
-            cascade = {
-                    CascadeType.PERSIST,
-                    CascadeType.MERGE
-            },
-            mappedBy = "chats")
-    @JsonIgnore
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "VCHAT_CHAT_MEMBERS",
+            joinColumns = @JoinColumn(name = "VCHAT_GROUP_ID"),
+            inverseJoinColumns = @JoinColumn(name = "VCHAT_USER_ID"))
     private List<User> members = new ArrayList<>();
     
     @Schema(example = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGJ6VrQAEAAA//8EQgH7dTCZ8gAAAABJRU5ErkJggg==",

@@ -1,6 +1,7 @@
 package com.example.vchatmessengerserver.user;
 
 import com.example.vchatmessengerserver.group.Group;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Entity(name = "vchat_user")
+@Entity(name = "VCHAT_USER")
 @Getter
 @Setter
 public class User {
@@ -30,21 +31,20 @@ public class User {
 
     @NonNull
     @Column(length = 200)
+    @JsonIgnore
     private String password;
 
-    @ManyToMany(fetch = FetchType.LAZY,
-            cascade = {
-                    CascadeType.PERSIST,
-                    CascadeType.MERGE
-            })
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "vchat_user_group",
-            joinColumns = @JoinColumn(name = "vchat_user_id"),
-            inverseJoinColumns = @JoinColumn(name = "vchat_group_id"))
+            name = "VCHAT_USER_CHATS",
+            joinColumns = @JoinColumn(name = "VCHAT_USER_ID"),
+            inverseJoinColumns = @JoinColumn(name = "VCHAT_GROUP_ID"))
+    @JsonIgnore
     private List<Group> chats = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @NotNull
+    @JsonIgnore
     private List<String> secretWords = new ArrayList<>();
 
     @Schema(example = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGJ6VrQAEAAA//8EQgH7dTCZ8gAAAABJRU5ErkJggg==",
