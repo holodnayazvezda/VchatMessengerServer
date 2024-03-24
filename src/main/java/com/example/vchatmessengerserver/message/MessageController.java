@@ -23,9 +23,9 @@ public class MessageController {
 
     @PutMapping(value = "/add_reader", name = "Add reader of the message")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Message> addReader(Authentication authentication, Message message) {
+    public ResponseEntity<Message> addReader(Authentication authentication, Long messageId) {
         return ResponseEntity.ok(
-                messageService.addReader(Auth.getUser(authentication), message)
+                messageService.addReader(Auth.getUser(authentication), messageId)
         );
     }
 
@@ -37,39 +37,39 @@ public class MessageController {
         );
     }
 
-    @GetMapping(value = "/get", name = "Get message with transferred id")
+    @PostMapping(value = "/get", name = "Get message with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Message> get(Message message) {
+    public ResponseEntity<Message> get(Long messageId) {
         return ResponseEntity.ok(
-                messageService.get(message.getId())
+                messageService.get(messageId)
         );
     }
 
-    @GetMapping(value = "/get_readers", name = "Get readers of this message")
+    @PostMapping(value = "/get_readers", name = "Get readers of this message")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<List<User>> getReaders(Authentication authentication, Message message) {
+    public ResponseEntity<List<User>> getReaders(Authentication authentication, Long messageId) {
         return ResponseEntity.ok(
-                messageService.getReaders(Auth.getUser(authentication), message)
+                messageService.getReaders(Auth.getUser(authentication), messageId)
         );
     }
 
-    @GetMapping(value = "/get_positions_of_found_messages", name = "Search messages in the chat with transferred id and return their positions in list")
+    @PostMapping(value = "/get_positions_of_found_messages", name = "Search messages in the chat with transferred id and return their positions in list")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<List<Integer>> getPositionsOfFoundMessages(Long groupId, String content, int limit, int offset) {
+    public ResponseEntity<List<Integer>> getPositionsOfFoundMessages(Long chatId, String content, int limit, int offset) {
         return ResponseEntity.ok(
-                messageService.getPositionsOfFoundMessages(groupId, content, limit, offset)
+                messageService.getPositionsOfFoundMessages(chatId, content, limit, offset)
         );
     }
 
-    @GetMapping(value = "/v1.0/message/get_last_message", name = "Get last message of the chat with transferred id")
+    @PostMapping(value = "/get_last_message", name = "Get last message of the chat with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Message> getLastMessage(Authentication authentication, Group chat) {
+    public ResponseEntity<Message> getLastMessage(Authentication authentication, Long chatId) {
         return ResponseEntity.ok(
-                messageService.getLastMessage(Auth.getUser(authentication), chat)
+                messageService.getLastMessage(Auth.getUser(authentication), chatId)
         );
     }
 
-    @GetMapping(value = "/v1.0/message/get_messages_with_offset", name = "Get all messages of the chat with transferred id with offset")
+    @PostMapping(value = "/get_messages_with_offset", name = "Get all messages of the chat with transferred id with offset")
     @SecurityRequirement(name = "basicAuth")
     public ResponseEntity<List<Message>> getMessagesWithOffset(Long chatId, int limit, int offset) {
         return ResponseEntity.ok(
@@ -77,9 +77,9 @@ public class MessageController {
         );
     }
 
-    @DeleteMapping(value = "/v1.0/message/delete", name = "Delete the message with transferred id")
+    @DeleteMapping(value = "/delete", name = "Delete the message with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public void delete(Authentication authentication, Message message) {
-        messageService.delete(Auth.getUser(authentication), message);
+    public void delete(Authentication authentication, Long messageId) {
+        messageService.delete(Auth.getUser(authentication), messageId);
     }
 }

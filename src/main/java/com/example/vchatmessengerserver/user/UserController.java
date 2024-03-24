@@ -70,22 +70,21 @@ public class UserController {
         userService.changeTypeOfImage(Auth.getUser(authentication).getId(), newTypeOfImage);
     }
 
-    @PutMapping(value = "/v1.0/user/add_chat", name = "Add chat with transferred id to list of user's chats")
+    @PutMapping(value = "/add_chat", name = "Add chat with transferred id to list of user's chats")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<User> addChat(Authentication authentication, Group newChat) {
+    public ResponseEntity<User> addChat(Authentication authentication, Long newChatId) {
         return ResponseEntity.ok(
-                userService.addChat(Auth.getUser(authentication), newChat)
+                userService.addChat(Auth.getUser(authentication), newChatId)
         );
     }
 
-    @PutMapping(value = "/v1.0/user/remove_chat", name = "Remove chat with transferred id from list of user's chats")
+    @PutMapping(value = "/remove_chat", name = "Remove chat with transferred id from list of user's chats")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<User> removeChat(Authentication authentication, Group chat) {
+    public ResponseEntity<User> removeChat(Authentication authentication, Long chatId) {
         return ResponseEntity.ok(
-                userService.removeChat(Auth.getUser(authentication), chat)
+                userService.removeChat(Auth.getUser(authentication), chatId)
         );
     }
-
 
     @PostMapping(value = "/create")
     public ResponseEntity<User> create(@RequestBody CreateUserDto createUserDto) {
@@ -94,18 +93,43 @@ public class UserController {
         );
     }
 
+    @PostMapping(value = "/can_write", name = "Check if user can write to chat with transferred id")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<Boolean> canWrite(Authentication authentication, Long chatId) {
+        return ResponseEntity.ok(
+                userService.canWrite(Auth.getUser(authentication), chatId)
+        );
+    }
+
+    @PostMapping(value = "/can_edit_chat", name = "Check if user can edit chat with transferred id")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<Boolean> canEditChat(Authentication authentication, Long chatId) {
+        return ResponseEntity.ok(
+                userService.canEditChat(Auth.getUser(authentication), chatId)
+        );
+    }
+
+    @PostMapping(value = "/can_delete_message", name = "Check if user can delete message with transferred id")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<Boolean> canDeleteMessage(Authentication authentication, Long messageId) {
+        return ResponseEntity.ok(
+                userService.canDeleteMessage(Auth.getUser(authentication), messageId)
+        );
+    }
+
+    @PostMapping(value = "/can_delete_chat", name = "Check if user can delete chat with transferred id")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<Boolean> canDeleteChat(Authentication authentication, Long chatId) {
+        return ResponseEntity.ok(
+                userService.canDeleteChat(Auth.getUser(authentication), chatId)
+        );
+    }
+
     @GetMapping(value = "/get")
     @SecurityRequirement(name = "basicAuth")
     public ResponseEntity<User> get(Authentication authentication) {
         return ResponseEntity.ok(
                 userService.get(Auth.getUser(authentication).getNickname())
-        );
-    }
-
-    @GetMapping(value = "/get_base_info")
-    public ResponseEntity<User> getBaseInfo(Long userId) {
-        return ResponseEntity.ok(
-                userService.getBaseInfo(userId)
         );
     }
 
@@ -147,39 +171,6 @@ public class UserController {
                 userService.searchChatsWithOffset(Auth.getUser(authentication), searchedText, limit, offset)
         );
     }
-
-    @GetMapping(value = "/v1.0/user/can_write", name = "Check if user can write to chat with transferred id")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Boolean> canWrite(Authentication authentication, Group chat) {
-        return ResponseEntity.ok(
-                userService.canWrite(Auth.getUser(authentication), chat)
-        );
-    }
-
-    @GetMapping(value = "/v1.0/user/can_edit_chat", name = "Check if user can edit chat with transferred id")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Boolean> canEditChat(Authentication authentication, Group chat) {
-        return ResponseEntity.ok(
-                userService.canEditChat(Auth.getUser(authentication), chat)
-        );
-    }
-
-    @GetMapping(value = "/v1.0/user/can_delete_message", name = "Check if user can delete message with transferred id")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Boolean> canDeleteMessage(Authentication authentication, Message message) {
-        return ResponseEntity.ok(
-                userService.canDeleteMessage(Auth.getUser(authentication), message)
-        );
-    }
-
-    @GetMapping(value = "/v1.0/user/can_delete_chat", name = "Check if user can delete chat with transferred id")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Boolean> canDeleteChat(Authentication authentication, Group chat) {
-        return ResponseEntity.ok(
-                userService.canDeleteChat(Auth.getUser(authentication), chat)
-        );
-    }
-
 
     @GetMapping(value = "/check_password")
     public ResponseEntity<Boolean> checkPassword(String userNickname, String verifiablePassword) {

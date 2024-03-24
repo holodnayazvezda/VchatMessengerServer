@@ -3,12 +3,14 @@ package com.example.vchatmessengerserver.group;
 import com.example.vchatmessengerserver.auth.Auth;
 import com.example.vchatmessengerserver.message.Message;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/group")
@@ -18,73 +20,73 @@ public class GroupController {
 
     @PutMapping(value = "/add_member", name = "Add member to group with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> addMember(Authentication authentication, Group group) {
+    public ResponseEntity<Group> addMember(Authentication authentication, Long groupId) {
         return ResponseEntity.ok(
-                groupService.addMember(Auth.getUser(authentication), group)
+                groupService.addMember(Auth.getUser(authentication), groupId)
         );
     }
 
     @PutMapping(value = "/remove_member", name = "Remove member from group with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> removeMember(Authentication authentication, Group group) {
+    public ResponseEntity<Group> removeMember(Authentication authentication, Long groupId) {
         return ResponseEntity.ok(
-                groupService.removeMember(Auth.getUser(authentication), group)
+                groupService.removeMember(Auth.getUser(authentication), groupId)
         );
     }
 
-    @PutMapping(value = "/v1.0/group/edit_name", name = "Edit name of the group with transferred id")
+    @PutMapping(value = "/edit_name", name = "Edit name of the group with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> editName(Authentication authentication, Group group, String newName) {
+    public ResponseEntity<Group> editName(Authentication authentication, Long groupId, String newName) {
         return ResponseEntity.ok(
-                groupService.editName(Auth.getUser(authentication), group, newName)
+                groupService.editName(Auth.getUser(authentication), groupId, newName)
         );
     }
 
-    @PutMapping(value = "/v1.0/group/edit_type_of_image", name = "Edit type of image of the group with transferred id")
+    @PutMapping(value = "/edit_type_of_image", name = "Edit type of image of the group with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> editTypeOfImage(Authentication authentication, Group group, Integer newTypeOfImage) {
+    public ResponseEntity<Group> editTypeOfImage(Authentication authentication, Long groupId, Integer newTypeOfImage) {
         return ResponseEntity.ok(
-                groupService.editTypeOfImage(Auth.getUser(authentication), group, newTypeOfImage)
+                groupService.editTypeOfImage(Auth.getUser(authentication), groupId, newTypeOfImage)
         );
     }
 
-    @PutMapping(value = "/v1.0/group/edit_image", name = "Edit image of the group with transferred id")
+    @PutMapping(value = "/edit_image", name = "Edit image of the group with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> editImage(Authentication authentication, Group group, String imageData) {
+    public ResponseEntity<Group> editImage(Authentication authentication, Long groupId, String imageData) {
         return ResponseEntity.ok(
-                groupService.editImage(Auth.getUser(authentication), group, imageData)
+                groupService.editImage(Auth.getUser(authentication), groupId, imageData)
         );
     }
 
-    @PutMapping(value = "/v1.0/group/edit_all", name = "Edit all the params of the group")
+    @PutMapping(value = "/edit_all", name = "Edit all the params of the group")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> editAll(Authentication authentication, Group group, String newName, Integer newTypeOfImage, String newImageData) {
+    public ResponseEntity<Group> editAll(Authentication authentication, Long groupId, String newName, Integer newTypeOfImage, String newImageData) {
         return ResponseEntity.ok(
-                groupService.editAll(Auth.getUser(authentication), group, newName, newTypeOfImage, newImageData)
+                groupService.editAll(Auth.getUser(authentication), groupId, newName, newTypeOfImage, newImageData)
         );
     }
 
-    @PutMapping(value = "/v1.0/group/add_message", name = "Add message with transferred id to group with transferred id")
+    @PutMapping(value = "/add_message", name = "Add message with transferred id to group with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> addMessage(Authentication authentication, Group group, Message message) {
+    public ResponseEntity<Group> addMessage(Authentication authentication, Long groupId, Long messageId) {
         return ResponseEntity.ok(
-                groupService.addMessage(Auth.getUser(authentication), group, message)
+                groupService.addMessage(Auth.getUser(authentication), groupId, messageId)
         );
     }
 
-    @PutMapping(value = "/v1.0/group/remove_message", name = "Remove message with transferred id from group with transferred id")
+    @PutMapping(value = "/remove_message", name = "Remove message with transferred id from group with transferred id")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> removeMessage(Authentication authentication, Group group, Message message) {
+    public ResponseEntity<Group> removeMessage(Authentication authentication, Long groupId, Long messageId) {
         return ResponseEntity.ok(
-                groupService.removeMessage(Auth.getUser(authentication), group, message)
+                groupService.removeMessage(Auth.getUser(authentication), groupId, messageId)
         );
     }
 
-    @PutMapping(value = "/get_fot_user", name = "Get chat for user")
+    @PutMapping(value = "/get_for_user", name = "Get chat for user")
     @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> getForUser(Authentication authentication, @RequestBody Group chat) {
+    public ResponseEntity<Group> getForUser(Authentication authentication, Long chatId) {
         return ResponseEntity.ok(
-                groupService.getChatForUser(Auth.getUser(authentication), chat)
+                groupService.getChatForUser(Auth.getUser(authentication), chatId)
         );
     }
 
@@ -114,7 +116,7 @@ public class GroupController {
 
     @DeleteMapping(value = "/delete", name = "Delete group")
     @SecurityRequirement(name = "basicAuth")
-    public void delete(Authentication authentication, @RequestBody Group group) {
-        groupService.delete(Auth.getUser(authentication), group);
+    public void delete(Authentication authentication, Long groupId) {
+        groupService.delete(Auth.getUser(authentication), groupId);
     }
 }

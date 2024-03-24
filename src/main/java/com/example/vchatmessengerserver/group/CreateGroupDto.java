@@ -18,7 +18,7 @@ public class CreateGroupDto {
 
     private Integer typeOfImage;
 
-    private List<User> members = new ArrayList<>();
+    private List<Long> membersIds = new ArrayList<>();
 
     private String imageData;
 }

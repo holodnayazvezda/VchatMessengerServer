@@ -10,5 +10,5 @@ import org.springframework.boot.web.server.GracefulShutdownCallback;
 public class CreateMessageDto {
     private String content;
 
-    private Group messageChat;
+    private Long messageChatId;
 }

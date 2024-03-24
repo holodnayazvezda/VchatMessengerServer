@@ -5,9 +5,9 @@ import com.example.vchatmessengerserver.exceptions.*;
 import com.example.vchatmessengerserver.group.Group;
 import com.example.vchatmessengerserver.group.GroupService;
 import com.example.vchatmessengerserver.message.Message;
+import com.example.vchatmessengerserver.message.MessageService;
 import com.example.vchatmessengerserver.username.NicknameService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,18 +36,21 @@ public class UserService {
     @Autowired
     GroupService groupService;
 
+    @Autowired
+    MessageService messageService;
+
     public User create(CreateUserDto createUserDto) {
         if (checkName(createUserDto.getName()) != ok) {
-            throw new WrongNameException();
+            throw new IncorrectNameException();
         } else if (nicknameService.checkForUser(createUserDto.getNickname()) != ok) {
-            throw new WrongNicknameException();
+            throw new IncorrectNicknameException();
         } else if (checkCorrectness(createUserDto.getPassword()) != ok) {
-            throw new WrongPasswordException();
+            throw new IncorrectPasswordException();
         } else if (createUserDto.getSecretWords().size() != 5) {
-            throw new WrongSecretKeysException();
+            throw new IncorrectSecretKeysException();
         } else if (createUserDto.getTypeOfImage() != 1 &&
                 createUserDto.getTypeOfImage() != 2) {
-            throw new WrongDataException();
+            throw new IncorrectDataException();
         } else {
             User user = new User();
             user.setName(createUserDto.getName());
@@ -80,14 +83,6 @@ public class UserService {
         }
     }
 
-    public User getBaseInfo(Long userId) {
-        User safeUserObject = get(userId);
-        safeUserObject.setPassword("");
-        safeUserObject.setChats(new ArrayList<>());
-        safeUserObject.setSecretWords(new ArrayList<>());
-        return safeUserObject;
-    }
-
     public boolean exists(String userNickname) {
         return userRepository.existsByNickname(userNickname.toLowerCase().strip());
     }
@@ -96,14 +91,17 @@ public class UserService {
         return userRepository.existsById(user.getId());
     }
 
-    public boolean isMember(User user, Group group) {
-        return user.getChats().contains(group);
+    public boolean isMember(User user, Long chatId) {
+        user = get(user.getId());
+        Group chat = groupService.getById(chatId);
+        return user.getChats().contains(chat);
     }
 
     public List<Group> getChats(User user) {
+        user = get(user.getId());
         List<Group> chats = new ArrayList<>();
         for (Group chat: user.getChats()) {
-            if (groupService.existsChat(chat)) {
+            if (groupService.existsChat(chat.getId())) {
                 chats.add(chat);
             }
         }
@@ -115,10 +113,12 @@ public class UserService {
     }
 
     public List<Group> getChatsWithOffset(User user, int limit, int offset) {
+        user = get(user.getId());
         return userRepository.getChatsWithOffset(user.getId(), limit, offset);
     }
 
     public List<Group> searchChatsWithOffset(User user, String searchedText, int limit, int offset) {
+        user = get(user.getId());
         return userRepository.searchChatsWithOffset(user.getId(), searchedText, limit, offset);
     }
 
@@ -132,7 +132,7 @@ public class UserService {
             user.setName(newName);
             userRepository.saveAndFlush(user);
         } else {
-            throw new WrongNameException();
+            throw new IncorrectNameException();
         }
     }
 
@@ -143,7 +143,7 @@ public class UserService {
             user.setNickname(newNickname);
             userRepository.saveAndFlush(user);
         } else {
-            throw new WrongNicknameException();
+            throw new IncorrectNicknameException();
         }
     }
 
@@ -153,7 +153,7 @@ public class UserService {
             user.setPassword(passwordEncoder.encode(newPassword));
             userRepository.saveAndFlush(user);
         } else {
-            throw new WrongPasswordException();
+            throw new IncorrectPasswordException();
         }
     }
 
@@ -168,7 +168,7 @@ public class UserService {
                 user.setPassword(passwordEncoder.encode(newPassword));
                 userRepository.saveAndFlush(user);
             } else {
-                throw new WrongPasswordException();
+                throw new IncorrectPasswordException();
             }
         } else {
             throw new NoRightsException();
@@ -181,7 +181,7 @@ public class UserService {
             user.setSecretWords(secretWords);
             userRepository.saveAndFlush(user);
         } else {
-            throw new WrongSecretKeysException();
+            throw new IncorrectSecretKeysException();
         }
     }
 
@@ -197,20 +197,26 @@ public class UserService {
             user.setTypeOfImage(newTypeOfImage);
             userRepository.saveAndFlush(user);
         } else {
-            throw new WrongDataException();
+            throw new IncorrectDataException();
         }
     }
 
-    public boolean canWrite(User user, Group chat) {
+    public boolean canWrite(User user, Long chatId) {
+        user = get(user.getId());
+        Group chat = groupService.getChatById(chatId);
         return user.getChats().contains(chat);
     }
 
-    public boolean canEditChat(User user, Group chat) {
+    public boolean canEditChat(User user, Long chatId) {
+        user = get(user.getId());
+        Group chat = groupService.getChatById(chatId);
         return chat.getOwner().equals(user);
     }
 
-    public boolean canDeleteMessage(User user, Message message) {
-        Group chat = message.getMessageChat();
+    public boolean canDeleteMessage(User user, Long messageId) {
+        user = get(user.getId());
+        Message message = messageService.get(messageId);
+        Group chat = groupService.getChatById(message.getMessageChat().getId());
         if (chat.getType() == 1) {
             return groupService.canDeleteMessage(user, message);
         } else {
@@ -218,35 +224,41 @@ public class UserService {
         }
     }
 
-    public boolean canDeleteChat(User user, Group chat) {
+    public boolean canDeleteChat(User user, Long chatId) {
+        user = get(user.getId());
+        Group chat = groupService.getChatById(chatId);
         return user.getChats().contains(chat);
     }
 
-    public User addChat(User user, Group newChat) {
+    public User addChat(User user, Long newChatId) {
+        user = get(user.getId());
+        Group newChat = groupService.getChatById(newChatId);
         if (!user.getChats().contains(newChat)) {
             user.getChats().add(newChat);
             if (newChat.getType() == 1) {
-                groupService.addMember(user, newChat);
+                groupService.addMember(user, newChat.getId());
             }
             else {
-                channelService.addMember(user, channelService.getByParent(newChat));
+                channelService.addMember(user, newChat.getId());
             }
         }
         return userRepository.saveAndFlush(user);
     }
 
-    public User removeChat(User user, Group chat) {
+    public User removeChat(User user, Long chatId) {
+        user = get(user.getId());
+        Group chat = groupService.getChatById(chatId);
         if (chat.getOwner().equals(user)) {
             if (chat.getType() == 1) {
-                groupService.delete(user, chat);
+                groupService.delete(user, chat.getId());
             } else {
-                channelService.delete(user, channelService.getByParent(chat));
+                channelService.delete(user, chat.getId());
             }
         } else {
             if (chat.getType() == 1) {
-                groupService.removeMember(user, chat);
+                groupService.removeMember(user, chat.getId());
             } else {
-                channelService.removeMember(user, channelService.getByParent(chat));
+                channelService.removeMember(user, chat.getId());
             }
             user.getChats().remove(chat);
             return userRepository.saveAndFlush(user);
@@ -271,13 +283,14 @@ public class UserService {
     }
 
     public void delete(User user) {
+        user = get(user.getId());
         List<Group> chatsIds = new ArrayList<>(user.getChats());
         for (Group group: chatsIds) {
             try {
                 if (group.getOwner().equals(user)) {
-                    groupService.delete(user, group);
+                    groupService.delete(user, group.getId());
                 } else {
-                    groupService.removeMember(user, group);
+                    groupService.removeMember(user, group.getId());
                 }
             } catch (Exception ignored) {}
         }

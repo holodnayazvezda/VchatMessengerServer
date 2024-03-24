@@ -1,6 +1,7 @@
 package com.example.vchatmessengerserver.channel;
 
 import com.example.vchatmessengerserver.exceptions.*;
+import com.example.vchatmessengerserver.gateway.MessageGateway;
 import com.example.vchatmessengerserver.group.Group;
 import com.example.vchatmessengerserver.message.Message;
 import com.example.vchatmessengerserver.message.MessageRepository;
@@ -43,17 +44,22 @@ public class ChannelService {
     @Autowired
     UserRepository userRepository;
 
-    public Channel create(User owner, CreateChannelDto dto) {
-        if (checkName(dto.getName()) != ok) {
-            throw new WrongNameException();
-        } else if (nicknameService.checkForChannel(dto.getNickname()) != ok) {
-            throw new WrongNicknameException();
+    @Autowired
+    MessageGateway messageGateway;
+
+    public Channel create(User owner, CreateChannelDto createChannelDto) {
+        if (checkName(createChannelDto.getName()) != ok) {
+            throw new IncorrectNameException();
+        }
+        if (nicknameService.checkForChannel(createChannelDto.getNickname()) != ok) {
+            throw new IncorrectNicknameException();
+        }
+        if (!userService.exists(owner)) {
+            throw new UserNotFoundException();
         }
         List<User> members = new ArrayList<>();
-        for (User member: dto.getMembers()) {
-            if (!userService.exists(member)) {
-                throw new UserNotFoundException();
-            }
+        for (Long memberId: createChannelDto.getMembersIds()) {
+            User member = userService.get(memberId);
             if (!members.contains(member)) {
                 members.add(member);
             }
@@ -61,19 +67,22 @@ public class ChannelService {
         if (!members.contains(owner)) {
             members.add(owner);
         }
+        if (createChannelDto.getTypeOfImage() != 1 && createChannelDto.getTypeOfImage() != 2) {
+            throw new IncorrectDataException();
+        }
         Channel channel = new Channel();
-        channel.setName(dto.getName());
-        channel.setNickname(dto.getNickname().toLowerCase().strip());
+        channel.setName(createChannelDto.getName());
+        channel.setNickname(createChannelDto.getNickname().toLowerCase().strip());
         channel.setType(2);
-        channel.setImageData(dto.getImageData());
+        channel.setImageData(createChannelDto.getImageData());
         channel.setOwner(owner);
         channel.setCreationDate(ZonedDateTime.now());
-        channel.setTypeOfImage(dto.getTypeOfImage());
+        channel.setTypeOfImage(createChannelDto.getTypeOfImage());
         channel.setMessages(new ArrayList<>());
         channel.setMembers(members);
-        channel.setUnreadMessagesCount(dto.getUnreadMessagesCount());
+        channel.setUnreadMessagesCount(createChannelDto.getUnreadMessagesCount());
         Channel channelToReturn = channelRepository.saveAndFlush(channel);
-        userService.addChat(channelToReturn.getOwner(), channelToReturn);
+        userService.addChat(channelToReturn.getOwner(), channelToReturn.getId());
         return channelToReturn;
     }
 
@@ -104,13 +113,14 @@ public class ChannelService {
     }
 
     public Channel getForUser(User user, Channel channel) {
+        channel = getById(channel.getId());
         channel.setUnreadMessagesCount(getUnreadMessagesCountForUser(user, channel));
         return channel;
     }
 
 
-    public boolean exists(Group channel) {
-        return channelRepository.existsById(channel.getId());
+    public boolean exists(Long channelId) {
+        return channelRepository.existsById(channelId);
     }
 
     public Long getUnreadMessagesCountForUser(User user, Channel channel) {
@@ -130,13 +140,14 @@ public class ChannelService {
         return unreadMessagesCount;
     }
 
-    public Channel addMember(User user, Channel channel) {
+    public Channel addMember(User user, Long channelId) {
+        Channel channel = getById(channelId);
         List<User> members = channel.getMembers();
         if (!members.contains(user)) {
             members.add(user);
             channel.setMembers(members);
             for (Message message: channel.getMessages()) {
-                messageService.addReader(user, message);
+                messageService.addReader(user, message.getId());
             }
             return channelRepository.saveAndFlush(channel);
         } else {
@@ -144,11 +155,12 @@ public class ChannelService {
         }
     }
 
-    public Channel removeMember(User user, Channel channel) {
+    public Channel removeMember(User user, Long channelId) {
+        Channel channel = getById(channelId);
         List<Message> messages = new ArrayList<>();
         for (Message message: new ArrayList<>(channel.getMessages())) {
             if (message.getOwner().equals(user)) {
-                removeMessage(user, channel, message);
+                removeMessage(user, channel.getId(), message.getId());
             } else {
                 messages.add(message);
             }
@@ -158,47 +170,51 @@ public class ChannelService {
         return channelRepository.saveAndFlush(channel);
     }
 
-    public Channel editName(User user, Channel channel, String newName) {
+    public Channel editName(User user, Long channelId, String newName) {
+        Channel channel = getById(channelId);
         if (channel.getOwner().equals(user)) {
             if (checkName(newName) == ok) {
                 channel.setName(newName);
                 return channelRepository.saveAndFlush(channel);
             } else {
-                throw new WrongNameException();
+                throw new IncorrectNameException();
             }
         } else {
             throw new NoRightsException();
         }
     }
 
-    public Channel editNickname(User user, Channel channel, String newNickname) {
+    public Channel editNickname(User user, Long channelId, String newNickname) {
+        Channel channel = getById(channelId);
         newNickname = newNickname.toLowerCase().strip();
         if (channel.getOwner().equals(user)) {
             if (nicknameService.checkForChannel(newNickname) == ok || channel.getNickname().equals(newNickname)) {
                 channel.setNickname(newNickname);
                 return channelRepository.saveAndFlush(channel);
             } else {
-                throw new WrongNicknameException();
+                throw new IncorrectNicknameException();
             }
         } else {
             throw new NoRightsException();
         }
     }
 
-    public Channel editTypeOfImage(User user, Channel channel, Integer newTypeOfImage) {
+    public Channel editTypeOfImage(User user, Long channelId, Integer newTypeOfImage) {
+        Channel channel = getById(channelId);
         if (channel.getOwner().equals(user)) {
             if (newTypeOfImage == 1 || newTypeOfImage == 2) {
                 channel.setTypeOfImage(newTypeOfImage);
                 return channelRepository.saveAndFlush(channel);
             } else {
-                throw new WrongDataException();
+                throw new IncorrectDataException();
             }
         } else {
             throw new NoRightsException();
         }
     }
 
-    public Channel editImage(User user, Channel channel, String imageData) {
+    public Channel editImage(User user, Long channelId, String imageData) {
+        Channel channel = getById(channelId);
         if (channel.getOwner().equals(user)) {
             channel.setImageData(imageData);
             return channelRepository.saveAndFlush(channel);
@@ -207,18 +223,19 @@ public class ChannelService {
         }
     }
 
-    public Channel editAll(User user, Channel channel, String newName, String newNickname, Integer newTypeOfImage, String newImageData) {
+    public Channel editAll(User user, Long channelId, String newName, String newNickname, Integer newTypeOfImage, String newImageData) {
+        Channel channel = getById(channelId);
         newNickname = newNickname.toLowerCase().strip();
         if (channel.getOwner().equals(user)) {
             if (checkName(newName) == ok) {
                 channel.setName(newName);
-            } else {throw new WrongNameException();}
+            } else {throw new IncorrectNameException();}
             if (nicknameService.checkForChannel(newNickname) == 200 || channel.getNickname().equals(newNickname)) {
                 channel.setNickname(newNickname);
-            } else {throw new WrongNicknameException();}
+            } else {throw new IncorrectNicknameException();}
             if (newTypeOfImage == 1 || newTypeOfImage == 2) {
                 channel.setTypeOfImage(newTypeOfImage);
-            } else {throw new WrongDataException();}
+            } else {throw new IncorrectDataException();}
             channel.setImageData(newImageData);
             return channelRepository.saveAndFlush(channel);
         } else {
@@ -226,7 +243,9 @@ public class ChannelService {
         }
     }
 
-    public Channel addMessage(User user, Channel channel, Message message) {
+    public Channel addMessage(User user, Long channelId, Long messageId) {
+        Channel channel = getById(channelId);
+        Message message = messageService.get(messageId);
         if (channel.getOwner().equals(user)) {
             List<Message> messages = channel.getMessages();
             if (!messages.contains(message)) {
@@ -241,7 +260,9 @@ public class ChannelService {
         }
     }
 
-    public Channel removeMessage(User user, Channel channel, Message message) {
+    public Channel removeMessage(User user, Long channelId, Long messageId) {
+        Channel channel = getById(channelId);
+        Message message = messageService.get(messageId);
         List<Message> messages = channel.getMessages();
         if (canDeleteMessage(user, message)) {
             messages.remove(message);
@@ -254,31 +275,32 @@ public class ChannelService {
     }
 
     public Boolean canDeleteMessage(User user, Message message) {
-        Group channel = message.getMessageChat();
+        Group channel = getById(message.getMessageChat().getId());
         return channel.getOwner().equals(user) &&
                 channel.getMessages().contains(message);
     }
 
-        public void delete(User user, Channel channel) {
-            if (channel.getOwner().equals(user)) {
-                for (Message message: channel.getMessages()) {
-                    try {
-                        messageRepository.delete(message);
-                    } catch (Exception ignored) {}
-                }
-                List<User> members = channel.getMembers();
-                for (User member: members) {
-                    try {
-                        member.getChats().remove(channel);
-                        userRepository.saveAndFlush(member);
-                    } catch (Exception ignored) {}
-                }
-                channelRepository.delete(channel);
-    //            for (User member: channel.getMembers()) {
-    //                messageGateway.notifyUserAboutChatDeleting(member, channel);
-    //            }
-            } else {
-                throw new NoRightsException();
+    public void delete(User user, Long channelId) {
+        Channel channel = getById(channelId);
+        if (channel.getOwner().equals(user)) {
+            for (Message message: channel.getMessages()) {
+                try {
+                    messageRepository.delete(message);
+                } catch (Exception ignored) {}
             }
+            List<User> members = channel.getMembers();
+            for (User member: members) {
+                try {
+                    member.getChats().remove(channel);
+                    userRepository.saveAndFlush(member);
+                } catch (Exception ignored) {}
+            }
+            channelRepository.delete(channel);
+            for (User member: channel.getMembers()) {
+                messageGateway.notifyUserAboutChatDeleting(member.getId(), channel.getId());
+            }
+        } else {
+            throw new NoRightsException();
+        }
     }
 }

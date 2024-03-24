@@ -2,6 +2,7 @@ package com.example.vchatmessengerserver.group;
 
 import com.example.vchatmessengerserver.channel.ChannelService;
 import com.example.vchatmessengerserver.exceptions.*;
+import com.example.vchatmessengerserver.gateway.MessageGateway;
 import com.example.vchatmessengerserver.message.Message;
 import com.example.vchatmessengerserver.message.MessageRepository;
 import com.example.vchatmessengerserver.message.MessageService;
@@ -41,21 +42,28 @@ public class GroupService {
     @Autowired
     ChannelService channelService;
 
+    @Autowired
+    MessageGateway messageGateway;
+
     public Group create(User owner, CreateGroupDto createGroupDto) {
         if (checkName(createGroupDto.getName()) != ok) {
-            throw new WrongNameException();
+            throw new IncorrectNameException();
+        }
+        if (!userService.exists(owner)) {
+            throw new UserNotFoundException();
         }
         List<User> members = new ArrayList<>();
-        for (User member: createGroupDto.getMembers()) {
-            if (!userService.exists(owner)) {
-                throw new UserNotFoundException();
-            }
+        for (Long memberId: createGroupDto.getMembersIds()) {
+            User member = userService.get(memberId);
             if (!members.contains(member)) {
                 members.add(member);
             }
         }
         if (!members.contains(owner)) {
             members.add(owner);
+        }
+        if (createGroupDto.getTypeOfImage() != 1 && createGroupDto.getTypeOfImage() != 2) {
+            throw new IncorrectDataException();
         }
         Group group = new Group();
         group.setName(createGroupDto.getName());
@@ -67,7 +75,7 @@ public class GroupService {
         group.setMembers(members);
         group.setUnreadMessagesCount(createGroupDto.getUnreadMessagesCount());
         Group groupToReturn = groupRepository.saveAndFlush(group);
-        userService.addChat(groupToReturn.getOwner(), group);
+        userService.addChat(groupToReturn.getOwner(), group.getId());
         return groupToReturn;
     }
 
@@ -93,27 +101,25 @@ public class GroupService {
     }
 
     public Group getForUser(User user, Group group) {
-        if (exists(group)) {
-            group.setUnreadMessagesCount(getUnreadMessagesCountForUser(user, group));
-            return group;
-        } else {
-            throw new ChatNotFoundException();
-        }
+        group = getById(group.getId());
+        group.setUnreadMessagesCount(getUnreadMessagesCountForUser(user, group));
+        return group;
     }
 
-    public Group getChatForUser(User user, Group chat) {
+    public Group getChatForUser(User user, Long chatId) {
+        Group chat = getChatById(chatId);
         if (chat.getType() == 1) {
             return getForUser(user, chat);
         }
         return channelService.getForUser(user, channelService.getByParent(chat));
     }
 
-    public boolean exists(Group group) {
-        return groupRepository.existsById(group.getId());
+    public boolean exists(Long chatId) {
+        return groupRepository.existsById(chatId);
     }
 
-    public boolean existsChat(Group chat) {
-        return (exists(chat) || channelService.exists(chat));
+    public boolean existsChat(Long chatId) {
+        return (exists(chatId) || channelService.exists(chatId));
     }
 
     public Long getUnreadMessagesCountForUser(User user, Group group) {
@@ -137,14 +143,15 @@ public class GroupService {
         return groupRepository.searchChatsWithOffset(chatName, limit, offset);
     }
 
-    public Group addMember(User user, Group group) {
+    public Group addMember(User user, Long groupId) {
+        Group group = getById(groupId);
         if (userService.exists(user)) {
             List<User> members = group.getMembers();
             if (!members.contains(user)) {
                 members.add(user);
                 group.setMembers(members);
                 for (Message message: group.getMessages()) {
-                    messageService.addReader(user, message);
+                    messageService.addReader(user, message.getId());
                 }
                 return groupRepository.saveAndFlush(group);
             } else {
@@ -155,12 +162,13 @@ public class GroupService {
         }
     }
 
-    public Group removeMember(User user, Group group) {
+    public Group removeMember(User user, Long groupId) {
+        Group group = getById(groupId);
         if (userService.exists(user)) {
             List<Message> messages = new ArrayList<>();
             for (Message message: group.getMessages()) {
                 if (message.getOwner().equals(user)) {
-                    removeMessage(user, group, message);
+                    removeMessage(user, group.getId(), message.getId());
                 } else {
                     messages.add(message);
                 }
@@ -173,33 +181,36 @@ public class GroupService {
         }
     }
 
-    public Group editName(User user, Group group, String newName) {
+    public Group editName(User user, Long groupId, String newName) {
+        Group group = getById(groupId);
         if (group.getOwner().equals(user)) {
             if (checkName(newName) == ok) {
                 group.setName(newName);
                 return groupRepository.saveAndFlush(group);
             } else {
-                throw new WrongNameException();
+                throw new IncorrectNameException();
             }
         } else {
             throw new NoRightsException();
         }
     }
 
-    public Group editTypeOfImage(User user, Group group, Integer newTypeOfImage) {
+    public Group editTypeOfImage(User user, Long groupId, Integer newTypeOfImage) {
+        Group group = getById(groupId);
         if (group.getOwner().equals(user)) {
             if (newTypeOfImage == 1 || newTypeOfImage == 2) {
                 group.setTypeOfImage(newTypeOfImage);
                 return groupRepository.saveAndFlush(group);
             } else {
-                throw new WrongDataException();
+                throw new IncorrectDataException();
             }
         } else {
             throw new NoRightsException();
         }
     }
 
-    public Group editImage(User user, Group group, String imageData) {
+    public Group editImage(User user, Long groupId, String imageData) {
+        Group group = getById(groupId);
         if (group.getOwner().equals(user)) {
             group.setImageData(imageData);
             return groupRepository.saveAndFlush(group);
@@ -208,14 +219,15 @@ public class GroupService {
         }
     }
 
-    public Group editAll(User user, Group group, String newName, Integer newTypeOfImage, String newImageData) {
+    public Group editAll(User user, Long groupId, String newName, Integer newTypeOfImage, String newImageData) {
+        Group group = getById(groupId);
         if (group.getOwner().equals(user)) {
             if (checkName(newName) == ok) {
                 group.setName(newName);
-            } else {throw new WrongNameException();}
+            } else {throw new IncorrectNameException();}
             if (newTypeOfImage == 1 || newTypeOfImage == 2) {
                 group.setTypeOfImage(newTypeOfImage);
-            } else {throw new WrongDataException();}
+            } else {throw new IncorrectDataException();}
             group.setImageData(newImageData);
             return groupRepository.saveAndFlush(group);
         } else {
@@ -224,21 +236,21 @@ public class GroupService {
     }
 
     public boolean canDeleteMessage(User user, Message message) {
-        Group group = message.getMessageChat();
+        Group group = getById(message.getMessageChat().getId());
         return group.getMembers().contains(user) &&
                 group.getMessages().contains(message) &&
                 (group.getOwner().equals(user) || message.getOwner().equals(user    ));
     }
 
-    public Group addMessage(User user, Group group, Message message) {
-        group = getById(group.getId());
+    public Group addMessage(User user, Long groupId, Long messageId) {
+        Group group = getById(groupId);
+        Message message = messageService.get(messageId);
         if (group.getMembers().contains(user)) {
             List<Message> messages = group.getMessages();
             if (!messages.contains(message)) {
                 messages.add(message);
                 group.setMessages(messages);
-                Group g = groupRepository.saveAndFlush(group);
-                return g;
+                return groupRepository.saveAndFlush(group);
             } else {
                 return group;
             }
@@ -247,26 +259,25 @@ public class GroupService {
         }
     }
 
-    public Group removeMessage(User user, Group group, Message message) {
-        if (messageService.exists(message)) {
-            List<Message> messages = group.getMessages();
-            if (userService.canDeleteMessage(user, message)) {
-                messages.remove(message);
-                messageRepository.deleteById(message.getId());
-                group.setMessages(messages);
-                return groupRepository.saveAndFlush(group);
-            } else {
-                throw new NoRightsException();
-            }
+    public Group removeMessage(User user, Long groupId, Long messageId) {
+        Group group = getById(groupId);
+        Message message = messageService.get(messageId);
+        List<Message> messages = group.getMessages();
+        if (userService.canDeleteMessage(user, messageId)) {
+            messages.remove(message);
+            messageRepository.deleteById(message.getId());
+            group.setMessages(messages);
+            return groupRepository.saveAndFlush(group);
         } else {
-            throw new MessageNotFoundException();
+            throw new NoRightsException();
         }
     }
 
 
 
 
-    public void delete(User user, Group group) {
+    public void delete(User user, Long groupId) {
+        Group group = getById(groupId);
         if (group.getOwner().equals(user)) {
             for (Message message: group.getMessages()) {
                 try {
@@ -281,9 +292,9 @@ public class GroupService {
                 } catch (Exception ignored) {}
             }
             groupRepository.deleteById(group.getId());
-//            for (User member: group.getMembers()) {
-//                messageGateway.notifyUserAboutChatDeleting(memberId, groupId);
-//            }
+            for (User member: group.getMembers()) {
+                messageGateway.notifyUserAboutChatDeleting(member.getId(), groupId);
+            }
         } else {
             throw new NoRightsException();
         }

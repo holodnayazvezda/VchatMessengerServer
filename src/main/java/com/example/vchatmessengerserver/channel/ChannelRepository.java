@@ -1,6 +1,5 @@
 package com.example.vchatmessengerserver.channel;
 
-import com.example.vchatmessengerserver.group.GroupRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
