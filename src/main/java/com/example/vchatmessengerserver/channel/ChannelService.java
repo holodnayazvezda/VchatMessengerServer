@@ -19,8 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.vchatmessengerserver.name.NameService.checkName;
-import static com.example.vchatmessengerserver.name.NameService.ok;
+import static com.example.vchatmessengerserver.username.NicknameService.ok;
 
 @Service
 public class ChannelService {
@@ -48,9 +47,6 @@ public class ChannelService {
     MessageGateway messageGateway;
 
     public Channel create(User owner, CreateChannelDto createChannelDto) {
-        if (checkName(createChannelDto.getName()) != ok) {
-            throw new IncorrectNameException();
-        }
         if (nicknameService.checkForChannel(createChannelDto.getNickname()) != ok) {
             throw new IncorrectNicknameException();
         }
@@ -173,12 +169,8 @@ public class ChannelService {
     public Channel editName(User user, Long channelId, String newName) {
         Channel channel = getById(channelId);
         if (channel.getOwner().equals(user)) {
-            if (checkName(newName) == ok) {
-                channel.setName(newName);
-                return channelRepository.saveAndFlush(channel);
-            } else {
-                throw new IncorrectNameException();
-            }
+            channel.setName(newName);
+            return channelRepository.saveAndFlush(channel);
         } else {
             throw new NoRightsException();
         }
@@ -227,9 +219,7 @@ public class ChannelService {
         Channel channel = getById(channelId);
         newNickname = newNickname.toLowerCase().strip();
         if (channel.getOwner().equals(user)) {
-            if (checkName(newName) == ok) {
-                channel.setName(newName);
-            } else {throw new IncorrectNameException();}
+            channel.setName(newName);
             if (nicknameService.checkForChannel(newNickname) == 200 || channel.getNickname().equals(newNickname)) {
                 channel.setNickname(newNickname);
             } else {throw new IncorrectNicknameException();}

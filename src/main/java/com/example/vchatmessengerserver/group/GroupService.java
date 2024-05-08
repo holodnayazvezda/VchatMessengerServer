@@ -18,9 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.vchatmessengerserver.name.NameService.checkName;
-import static com.example.vchatmessengerserver.name.NameService.ok;
-
 @Service
 public class GroupService {
     @Autowired
@@ -46,9 +43,6 @@ public class GroupService {
     MessageGateway messageGateway;
 
     public Group create(User owner, CreateGroupDto createGroupDto) {
-        if (checkName(createGroupDto.getName()) != ok) {
-            throw new IncorrectNameException();
-        }
         if (!userService.exists(owner)) {
             throw new UserNotFoundException();
         }
@@ -184,12 +178,8 @@ public class GroupService {
     public Group editName(User user, Long groupId, String newName) {
         Group group = getById(groupId);
         if (group.getOwner().equals(user)) {
-            if (checkName(newName) == ok) {
-                group.setName(newName);
-                return groupRepository.saveAndFlush(group);
-            } else {
-                throw new IncorrectNameException();
-            }
+            group.setName(newName);
+            return groupRepository.saveAndFlush(group);
         } else {
             throw new NoRightsException();
         }
@@ -222,9 +212,7 @@ public class GroupService {
     public Group editAll(User user, Long groupId, String newName, Integer newTypeOfImage, String newImageData) {
         Group group = getById(groupId);
         if (group.getOwner().equals(user)) {
-            if (checkName(newName) == ok) {
-                group.setName(newName);
-            } else {throw new IncorrectNameException();}
+            group.setName(newName);
             if (newTypeOfImage == 1 || newTypeOfImage == 2) {
                 group.setTypeOfImage(newTypeOfImage);
             } else {throw new IncorrectDataException();}
@@ -287,8 +275,8 @@ public class GroupService {
             List<User> members = group.getMembers();
             for (User member: members) {
                 try {
-                    user.getChats().remove(group);
-                    userRepository.saveAndFlush(user);
+                    member.getChats().remove(group);
+                    userRepository.saveAndFlush(member);
                 } catch (Exception ignored) {}
             }
             groupRepository.deleteById(group.getId());

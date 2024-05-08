@@ -15,9 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.vchatmessengerserver.name.NameService.checkName;
-import static com.example.vchatmessengerserver.name.NameService.ok;
 import static com.example.vchatmessengerserver.password.PasswordService.checkCorrectness;
+import static com.example.vchatmessengerserver.username.NicknameService.ok;
 
 @Service
 public class UserService {
@@ -40,9 +39,7 @@ public class UserService {
     MessageService messageService;
 
     public User create(CreateUserDto createUserDto) {
-        if (checkName(createUserDto.getName()) != ok) {
-            throw new IncorrectNameException();
-        } else if (nicknameService.checkForUser(createUserDto.getNickname()) != ok) {
+        if (nicknameService.checkForUser(createUserDto.getNickname()) != ok) {
             throw new IncorrectNicknameException();
         } else if (checkCorrectness(createUserDto.getPassword()) != ok) {
             throw new IncorrectPasswordException();
@@ -128,12 +125,8 @@ public class UserService {
 
     public void changeName(Long userId, String newName) {
         User user = get(userId);
-        if (checkName(newName) == ok) {
-            user.setName(newName);
-            userRepository.saveAndFlush(user);
-        } else {
-            throw new IncorrectNameException();
-        }
+        user.setName(newName);
+        userRepository.saveAndFlush(user);
     }
 
     public void changeNickname(Long userId, String newNickname) {
