@@ -2,7 +2,6 @@ package com.example.vchatmessengerserver.group;
 
 import com.example.vchatmessengerserver.message.Message;
 import com.example.vchatmessengerserver.user.User;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Getter;
