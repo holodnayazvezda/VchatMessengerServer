@@ -48,7 +48,7 @@ public class Group {
     private List<User> members = new ArrayList<>();
     
     @Schema(example = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGJ6VrQAEAAA//8EQgH7dTCZ8gAAAABJRU5ErkJggg==",
-            description = "Base64-encoded avatar image thumbnail", required = true)
+            description = "Base64-encoded avatar image thumbnail")
     @Column(name = "IMAGE_DATA", columnDefinition = "LONGTEXT", nullable = false, length = 10000000)
     private String imageData;
 
