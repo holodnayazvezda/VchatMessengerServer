@@ -56,13 +56,15 @@ public class SecurityConfig {
                         "/user/get_base_info",
                         "/user-controller/get_base_info",
                         "/user/exists",
-                        "/user-controller/exists",
-                        "/user/change_password_by_secret_words",
-                        "/user-controller/change_password_by_secret_words",
-                        "/user/check_secret_words",
-                        "/user-controller/check_secret_words",
+                        "/user-controller/exists", 
+                        "/user/change_password_by_secret_key",
+                        "/user-controller/change_password_by_secret_key",
+                        "/user/check_secret_key",
+                        "/user-controller/check_secret_key",
                         "/user/check_password",
-                        "/user-controller/check_password")
+                        "/user-controller/check_password",
+                        "/user/generate_secret_key",
+                        "/user-controller/generate_secret_key")
                         .permitAll().anyRequest().fullyAuthenticated());
         return httpSecurity.build();
     }

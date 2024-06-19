@@ -45,16 +45,16 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     @NotNull
     @JsonIgnore
-    private List<String> secretWords = new ArrayList<>();
+    private List<String> secretKey = new ArrayList<>();
 
     @Schema(example = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGJ6VrQAEAAA//8EQgH7dTCZ8gAAAABJRU5ErkJggg==",
             description = "Base64-encoded avatar image thumbnail"   )
-    @Column(name = "IMAGE_DATA", columnDefinition = "LONGTEXT", nullable = false, length = 10000000)
+    @Column(name = "AVATAR_DATA", columnDefinition = "LONGTEXT", nullable = false, length = 10000000)
     @Lob
-    private String imageData;
+    private String avatarData;
 
     @Getter @Setter
-    private int typeOfImage;
+    private int avatarType;
 
     @Override
     public boolean equals(Object obj) {

@@ -8,12 +8,14 @@ import com.example.vchatmessengerserver.message.Message;
 import com.example.vchatmessengerserver.message.MessageService;
 import com.example.vchatmessengerserver.username.NicknameService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.*;
 
 import static com.example.vchatmessengerserver.password.PasswordService.checkCorrectness;
 import static com.example.vchatmessengerserver.username.NicknameService.ok;
@@ -43,20 +45,20 @@ public class UserService {
             throw new IncorrectNicknameException();
         } else if (checkCorrectness(createUserDto.getPassword()) != ok) {
             throw new IncorrectPasswordException();
-        } else if (createUserDto.getSecretWords().size() != 5) {
-            throw new IncorrectSecretKeysException();
-        } else if (createUserDto.getTypeOfImage() != 1 &&
-                createUserDto.getTypeOfImage() != 2) {
+        } else if (createUserDto.getSecretKey().size() != 5) {
+            throw new IncorrectSecretKeyException();
+        } else if (createUserDto.getAvatarType() != 1 &&
+                createUserDto.getAvatarType() != 2) {
             throw new IncorrectDataException();
         } else {
             User user = new User();
             user.setName(createUserDto.getName());
             user.setNickname(createUserDto.getNickname().toLowerCase().strip());
             user.setPassword(passwordEncoder.encode(createUserDto.getPassword()));
-            user.setImageData(createUserDto.getImageData());
+            user.setAvatarData(createUserDto.getAvatarData());
             user.setChats(new ArrayList<>());
-            user.setSecretWords(createUserDto.getSecretWords());
-            user.setTypeOfImage(createUserDto.getTypeOfImage());
+            user.setSecretKey(createUserDto.getSecretKey());
+            user.setAvatarType(createUserDto.getAvatarType());
             return userRepository.saveAndFlush(user);
         }
     }
@@ -114,6 +116,40 @@ public class UserService {
         return userRepository.getChatsWithOffset(user.getId(), limit, offset);
     }
 
+    public List<String> generateSecretKey() {
+        // Получаем ресурс (файл) из папки resources/static
+        ClassPathResource resource = new ClassPathResource("static/words_list.txt");
+        try {
+            // Читаем файл с помощью BufferedReader
+            BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()));
+            List<String> words = new ArrayList<>();
+            String line;
+
+            // Читаем каждую строку файла
+            while ((line = reader.readLine()) != null) {
+                // Разделяем строку на слова по пробелам
+                String[] splitWords = line.split("\\s+");
+                // Добавляем слова в список
+                Collections.addAll(words, splitWords);
+            }
+
+            // Закрываем BufferedReader
+            reader.close();
+
+            // Генерируем 5 случайных индексов
+            List<String> randomWords = new ArrayList<>();
+            Random random = new Random();
+            for (int i = 0; i < 5; i++) {
+                int randomIndex = random.nextInt(words.size());
+                randomWords.add(words.get(randomIndex));
+            }
+
+            return randomWords;
+        } catch (IOException e) {
+            return Arrays.asList("code", "vchat", "data", "security", "programming");
+        }
+    }
+
     public List<Group> searchChatsWithOffset(User user, String searchedText, int limit, int offset) {
         user = get(user.getId());
         return userRepository.searchChatsWithOffset(user.getId(), searchedText, limit, offset);
@@ -151,11 +187,10 @@ public class UserService {
     }
 
     public void changePassword(String userNickname,
-                               int a, String a_value,
-                               int b, String b_value,
-                               int c, String c_value,
+                               List<Integer> secretKeyWordsNumbers,
+                               List<String> secretKeyWords,
                                String newPassword) {
-        if (checkSecretWords(userNickname, a, a_value, b, b_value, c, c_value)) {
+        if (checkSecretKey(userNickname, secretKeyWordsNumbers, secretKeyWords)) {
             if (checkCorrectness(newPassword) == ok) {
                 User user = get(userNickname);
                 user.setPassword(passwordEncoder.encode(newPassword));
@@ -168,26 +203,26 @@ public class UserService {
         }
     }
 
-    public void changeSecretWords(Long userId, List<String> secretWords) {
+    public void changeSecretKey(Long userId, List<String> secretKey) {
         User user = get(userId);
-        if (secretWords.size() == 5) {
-            user.setSecretWords(secretWords);
+        if (secretKey.size() == 5) {
+            user.setSecretKey(secretKey);
             userRepository.saveAndFlush(user);
         } else {
-            throw new IncorrectSecretKeysException();
+            throw new IncorrectSecretKeyException();
         }
     }
 
     public void changeImage(Long userId, String newImageData) {
         User user = get(userId);
-        user.setImageData(newImageData);
+        user.setAvatarData(newImageData);
         userRepository.saveAndFlush(user);
     }
 
     public void changeTypeOfImage(Long userId, int newTypeOfImage) {
         User user = get(userId);
         if (newTypeOfImage == 1 || newTypeOfImage == 2) {
-            user.setTypeOfImage(newTypeOfImage);
+            user.setAvatarType(newTypeOfImage);
             userRepository.saveAndFlush(user);
         } else {
             throw new IncorrectDataException();
@@ -264,15 +299,19 @@ public class UserService {
         return passwordEncoder.matches(verifiablePassword, get(userNickname).getPassword());
     }
 
-    public boolean checkSecretWords(String userNickname,
-                                   int a, String a_value,
-                                   int b, String b_value,
-                                   int c, String c_value
+    public boolean checkSecretKey(
+            String userNickname,
+            List<Integer> secretKeyWordsNumbers,
+            List<String> secretKeyWords
     ) {
         User user = get(userNickname);
-        return user.getSecretWords().get(a).equals(a_value.strip()) &&
-                user.getSecretWords().get(b).equals(b_value.strip()) &&
-                user.getSecretWords().get(c).equals(c_value.strip());
+        for (int secretKeyWordNumber: secretKeyWordsNumbers) {
+            int secretKeyWordIndex = secretKeyWordsNumbers.indexOf(secretKeyWordNumber);
+            if (!user.getSecretKey().get(secretKeyWordNumber).equals(secretKeyWords.get(secretKeyWordIndex))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void delete(User user) {

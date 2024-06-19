@@ -86,7 +86,7 @@ public class GeneralExceptionsHandler {
         return new ErrorResponse("INCORRECT_PASSWORD", "An incorrect password was passed");
     }
 
-    @ExceptionHandler(IncorrectSecretKeysException.class)
+    @ExceptionHandler(IncorrectSecretKeyException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ErrorResponse handleIncorrectSecretKeysException() {

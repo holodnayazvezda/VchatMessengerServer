@@ -3,7 +3,6 @@ package com.example.vchatmessengerserver.user;
 
 import com.example.vchatmessengerserver.auth.Auth;
 import com.example.vchatmessengerserver.group.Group;
-import com.example.vchatmessengerserver.message.Message;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,25 +35,24 @@ public class UserController {
         userService.changePassword(Auth.getUser(authentication).getId(), password);
     }
 
-    @PutMapping(value = "/change_password_by_secret_words")
-    public void changePasswordBySecretWords(String userNickname,
-                                           int a, String a_value,
-                                           int b, String b_value,
-                                           int c, String c_value,
-                                           String newPassword) {
-        userService.changePassword(userNickname,
-                a, a_value,
-                b, b_value,
-                c, c_value,
+    @PutMapping(value = "/change_password_by_secret_key")
+    public void changePasswordBySecretKey(String userNickname,
+                                          @RequestParam List<Integer> secretKeyWordsNumbers,
+                                          @RequestParam List<String> secretKeyWords,
+                                          String newPassword) {
+        userService.changePassword(
+                userNickname,
+                secretKeyWordsNumbers,
+                secretKeyWords,
                 newPassword
         );
     }
 
-    @PutMapping(value = "/change_secret_words")
+    @PutMapping(value = "/change_secret_key")
     @SecurityRequirement(name = "basicAuth")
-    public void changeSecretWords(Authentication authentication, @RequestParam List<String> secretWords) {
-        userService.changeSecretWords(Auth.getUser(authentication).getId(),
-                secretWords);
+    public void changeSecretKey(Authentication authentication, @RequestParam List<String> secretKey) {
+        userService.changeSecretKey(Auth.getUser(authentication).getId(),
+                secretKey);
     }
 
     @PutMapping(value = "/change_image")
@@ -164,6 +162,13 @@ public class UserController {
         );
     }
 
+    @GetMapping(value = "/generate_secret_key", name = "Generate new secret key")
+    public ResponseEntity<List<String>> generateSecretKey() {
+        return ResponseEntity.ok(
+                userService.generateSecretKey()
+        );
+    }
+
     @GetMapping(value = "/search_chats_with_offset", name = "Search user's chats with offset")
     @SecurityRequirement(name = "basicAuth")
     public ResponseEntity<List<Group>> searchChatsWithOffset(Authentication authentication, String searchedText,  int limit, int offset) {
@@ -179,16 +184,18 @@ public class UserController {
         );
     }
 
-    @GetMapping(value = "/check_secret_words")
-    public ResponseEntity<Boolean> checkSecretWords(String userNickname,
-                                                   int a, String a_value,
-                                                   int b, String b_value,
-                                                   int c, String c_value) {
+    @GetMapping(value = "/check_secret_key")
+    public ResponseEntity<Boolean> checkSecretKey(
+            String userNickname,
+            @RequestParam List<Integer> secretKeyWordsNumbers,
+            @RequestParam List<String> secretKeyWords
+    ) {
         return ResponseEntity.ok(
-                userService.checkSecretWords(userNickname,
-                        a, a_value,
-                        b, b_value,
-                        c, c_value)
+                userService.checkSecretKey(
+                        userNickname,
+                        secretKeyWordsNumbers,
+                        secretKeyWords
+                )
         );
     }
 
