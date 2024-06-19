@@ -48,13 +48,6 @@ public class UserController {
         );
     }
 
-    @PutMapping(value = "/change_secret_key")
-    @SecurityRequirement(name = "basicAuth")
-    public void changeSecretKey(Authentication authentication, @RequestParam List<String> secretKey) {
-        userService.changeSecretKey(Auth.getUser(authentication).getId(),
-                secretKey);
-    }
-
     @PutMapping(value = "/change_image")
     @SecurityRequirement(name = "basicAuth")
     public void changeImage(Authentication authentication, String newImageData) {
@@ -85,7 +78,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/create")
-    public ResponseEntity<User> create(@RequestBody CreateUserDto createUserDto) {
+    public ResponseEntity<List<String>> create(@RequestBody CreateUserDto createUserDto) {
         return ResponseEntity.ok(
                 userService.create(createUserDto)
         );
@@ -138,6 +131,14 @@ public class UserController {
         );
     }
 
+    @GetMapping(value = "/get_secret_key")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<List<String>> getSecretKey(Authentication authentication) {
+        return ResponseEntity.ok(
+                userService.getSecretKey(Auth.getUser(authentication))
+        );
+    }
+
     @GetMapping(value = "/get_amount_chats")
     @SecurityRequirement(name = "basicAuth")
     public ResponseEntity<Integer> getAmountOfChats(Authentication authentication) {
@@ -162,18 +163,19 @@ public class UserController {
         );
     }
 
-    @GetMapping(value = "/generate_secret_key", name = "Generate new secret key")
-    public ResponseEntity<List<String>> generateSecretKey() {
-        return ResponseEntity.ok(
-                userService.generateSecretKey()
-        );
-    }
-
     @GetMapping(value = "/search_chats_with_offset", name = "Search user's chats with offset")
     @SecurityRequirement(name = "basicAuth")
     public ResponseEntity<List<Group>> searchChatsWithOffset(Authentication authentication, String searchedText,  int limit, int offset) {
         return ResponseEntity.ok(
                 userService.searchChatsWithOffset(Auth.getUser(authentication), searchedText, limit, offset)
+        );
+    }
+
+    @GetMapping(value = "/regenerate_secret_key", name = "Regenerate user's secret key")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<List<String>> regenerateSecretKey(Authentication authentication) {
+        return ResponseEntity.ok(
+                userService.regenerateSecretKey(Auth.getUser(authentication))
         );
     }
 

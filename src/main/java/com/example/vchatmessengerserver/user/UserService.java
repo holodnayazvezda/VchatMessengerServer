@@ -40,13 +40,11 @@ public class UserService {
     @Autowired
     MessageService messageService;
 
-    public User create(CreateUserDto createUserDto) {
+    public List<String> create(CreateUserDto createUserDto) {
         if (nicknameService.checkForUser(createUserDto.getNickname()) != ok) {
             throw new IncorrectNicknameException();
         } else if (checkCorrectness(createUserDto.getPassword()) != ok) {
             throw new IncorrectPasswordException();
-        } else if (createUserDto.getSecretKey().size() != 5) {
-            throw new IncorrectSecretKeyException();
         } else if (createUserDto.getAvatarType() != 1 &&
                 createUserDto.getAvatarType() != 2) {
             throw new IncorrectDataException();
@@ -57,9 +55,10 @@ public class UserService {
             user.setPassword(passwordEncoder.encode(createUserDto.getPassword()));
             user.setAvatarData(createUserDto.getAvatarData());
             user.setChats(new ArrayList<>());
-            user.setSecretKey(createUserDto.getSecretKey());
+            user.setSecretKey(generateSecretKey());
             user.setAvatarType(createUserDto.getAvatarType());
-            return userRepository.saveAndFlush(user);
+            User savedUser = userRepository.saveAndFlush(user);
+            return savedUser.getSecretKey();
         }
     }
 
@@ -116,6 +115,11 @@ public class UserService {
         return userRepository.getChatsWithOffset(user.getId(), limit, offset);
     }
 
+    public List<String> getSecretKey(User user) {
+        user = get(user.getId());
+        return user.getSecretKey();
+    }
+
     public List<String> generateSecretKey() {
         // Получаем ресурс (файл) из папки resources/static
         ClassPathResource resource = new ClassPathResource("static/words_list.txt");
@@ -148,6 +152,14 @@ public class UserService {
         } catch (IOException e) {
             return Arrays.asList("code", "vchat", "data", "security", "programming");
         }
+    }
+
+    public List<String> regenerateSecretKey(User user) {
+        user = get(user.getId());
+        List<String> newSecretKey = generateSecretKey();
+        user.setSecretKey(newSecretKey);
+        userRepository.saveAndFlush(user);
+        return newSecretKey;
     }
 
     public List<Group> searchChatsWithOffset(User user, String searchedText, int limit, int offset) {
@@ -200,16 +212,6 @@ public class UserService {
             }
         } else {
             throw new NoRightsException();
-        }
-    }
-
-    public void changeSecretKey(Long userId, List<String> secretKey) {
-        User user = get(userId);
-        if (secretKey.size() == 5) {
-            user.setSecretKey(secretKey);
-            userRepository.saveAndFlush(user);
-        } else {
-            throw new IncorrectSecretKeyException();
         }
     }
 

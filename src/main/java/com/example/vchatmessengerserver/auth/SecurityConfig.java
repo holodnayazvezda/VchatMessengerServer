@@ -62,9 +62,7 @@ public class SecurityConfig {
                         "/user/check_secret_key",
                         "/user-controller/check_secret_key",
                         "/user/check_password",
-                        "/user-controller/check_password",
-                        "/user/generate_secret_key",
-                        "/user-controller/generate_secret_key")
+                        "/user-controller/check_password")
                         .permitAll().anyRequest().fullyAuthenticated());
         return httpSecurity.build();
     }
