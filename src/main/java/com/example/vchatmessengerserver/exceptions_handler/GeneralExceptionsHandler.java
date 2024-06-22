@@ -17,10 +17,15 @@ public class GeneralExceptionsHandler {
         return new ErrorResponse("INTERNAL_SERVER_ERROR", "An unexpected internal server error occured");
     }
 
-    @Data
-    public static class ErrorResponse {
-        private final String code;
-        private final String message;
+
+    public record ErrorResponse(String code, String message) {}
+
+
+    @ExceptionHandler(DataNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public ErrorResponse handleDataNotFoundException() {
+        return new ErrorResponse("DATA_NOT_FOUND", "The requested data was not found");
     }
 
     @ExceptionHandler(ChatNotFoundException.class)
