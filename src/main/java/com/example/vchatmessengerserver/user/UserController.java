@@ -2,6 +2,7 @@ package com.example.vchatmessengerserver.user;
 
 
 import com.example.vchatmessengerserver.auth.Auth;
+import com.example.vchatmessengerserver.files.avatar.AvatarDto;
 import com.example.vchatmessengerserver.group.Group;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,19 +49,6 @@ public class UserController {
         );
     }
 
-    @PutMapping(value = "/change_image")
-    @SecurityRequirement(name = "basicAuth")
-    public void changeImage(Authentication authentication, String newImageData) {
-        userService.changeImage(Auth.getUser(authentication).getId(),
-                newImageData);
-    }
-
-    @PutMapping(value = "/set_type_of_image")
-    @SecurityRequirement(name = "basicAuth")
-    public void setTypeOfImage(Authentication authentication, int newTypeOfImage) {
-        userService.changeTypeOfImage(Auth.getUser(authentication).getId(), newTypeOfImage);
-    }
-
     @PutMapping(value = "/add_chat", name = "Add chat with transferred id to list of user's chats")
     @SecurityRequirement(name = "basicAuth")
     public ResponseEntity<User> addChat(Authentication authentication, Long newChatId) {
@@ -82,6 +70,12 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.create(createUserDto)
         );
+    }
+
+    @PostMapping(value = "/change_image")
+    @SecurityRequirement(name = "basicAuth")
+    public void changeImage(Authentication authentication, @RequestBody AvatarDto newAvatar) {
+        userService.changeImage(Auth.getUser(authentication).getId(), newAvatar);
     }
 
     @PostMapping(value = "/can_write", name = "Check if user can write to chat with transferred id")

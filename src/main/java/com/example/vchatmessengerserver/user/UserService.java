@@ -2,6 +2,7 @@ package com.example.vchatmessengerserver.user;
 
 import com.example.vchatmessengerserver.channel.ChannelService;
 import com.example.vchatmessengerserver.exceptions.*;
+import com.example.vchatmessengerserver.files.avatar.AvatarDto;
 import com.example.vchatmessengerserver.group.Group;
 import com.example.vchatmessengerserver.group.GroupService;
 import com.example.vchatmessengerserver.message.Message;
@@ -45,18 +46,18 @@ public class UserService {
             throw new IncorrectNicknameException();
         } else if (checkCorrectness(createUserDto.getPassword()) != ok) {
             throw new IncorrectPasswordException();
-        } else if (createUserDto.getAvatarType() != 1 &&
-                createUserDto.getAvatarType() != 2) {
+        } else if (createUserDto.getAvatar().getAvatarType() != 1 &&
+                   createUserDto.getAvatar().getAvatarType() != 2
+        ) {
             throw new IncorrectDataException();
         } else {
             User user = new User();
             user.setName(createUserDto.getName());
             user.setNickname(createUserDto.getNickname().toLowerCase().strip());
             user.setPassword(passwordEncoder.encode(createUserDto.getPassword()));
-            user.setAvatarData(createUserDto.getAvatarData());
+            user.setAvatar(createUserDto.getAvatar());
             user.setChats(new ArrayList<>());
             user.setSecretKey(generateSecretKey());
-            user.setAvatarType(createUserDto.getAvatarType());
             User savedUser = userRepository.saveAndFlush(user);
             return savedUser.getSecretKey();
         }
@@ -215,20 +216,13 @@ public class UserService {
         }
     }
 
-    public void changeImage(Long userId, String newImageData) {
-        User user = get(userId);
-        user.setAvatarData(newImageData);
-        userRepository.saveAndFlush(user);
-    }
-
-    public void changeTypeOfImage(Long userId, int newTypeOfImage) {
-        User user = get(userId);
-        if (newTypeOfImage == 1 || newTypeOfImage == 2) {
-            user.setAvatarType(newTypeOfImage);
-            userRepository.saveAndFlush(user);
-        } else {
+    public void changeImage(Long userId, AvatarDto newAvatar) {
+        if (newAvatar.getAvatarType() != 1 && newAvatar.getAvatarType() != 2) {
             throw new IncorrectDataException();
         }
+        User user = get(userId);
+        user.setAvatar(newAvatar);
+        userRepository.saveAndFlush(user);
     }
 
     public boolean canWrite(User user, Long chatId) {

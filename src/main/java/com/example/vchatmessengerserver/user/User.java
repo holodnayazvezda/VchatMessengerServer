@@ -1,8 +1,8 @@
 package com.example.vchatmessengerserver.user;
 
+import com.example.vchatmessengerserver.files.avatar.AvatarDto;
 import com.example.vchatmessengerserver.group.Group;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -47,14 +47,8 @@ public class User {
     @JsonIgnore
     private List<String> secretKey = new ArrayList<>();
 
-    @Schema(example = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGJ6VrQAEAAA//8EQgH7dTCZ8gAAAABJRU5ErkJggg==",
-            description = "Base64-encoded avatar image thumbnail"   )
-    @Column(name = "AVATAR_DATA", columnDefinition = "LONGTEXT", nullable = false, length = 10000000)
-    @Lob
-    private String avatarData;
-
-    @Getter @Setter
-    private int avatarType;
+    @OneToOne(fetch = FetchType.EAGER)
+    private AvatarDto avatar;
 
     @Override
     public boolean equals(Object obj) {
