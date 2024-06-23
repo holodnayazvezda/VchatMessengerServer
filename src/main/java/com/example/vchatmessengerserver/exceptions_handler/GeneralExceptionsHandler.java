@@ -1,7 +1,6 @@
 package com.example.vchatmessengerserver.exceptions_handler;
 
 import com.example.vchatmessengerserver.exceptions.*;
-import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,7 +24,7 @@ public class GeneralExceptionsHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public ErrorResponse handleDataNotFoundException() {
-        return new ErrorResponse("DATA_NOT_FOUND", "The requested data was not found");
+        return new ErrorResponse("DATA_NOT_FOUND", "The requested (provided) data was not found");
     }
 
     @ExceptionHandler(ChatNotFoundException.class)

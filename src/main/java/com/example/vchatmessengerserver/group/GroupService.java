@@ -2,6 +2,9 @@ package com.example.vchatmessengerserver.group;
 
 import com.example.vchatmessengerserver.channel.ChannelService;
 import com.example.vchatmessengerserver.exceptions.*;
+import com.example.vchatmessengerserver.files.avatar.Avatar;
+import com.example.vchatmessengerserver.files.avatar.AvatarDTO;
+import com.example.vchatmessengerserver.files.avatar.AvatarService;
 import com.example.vchatmessengerserver.gateway.MessageGateway;
 import com.example.vchatmessengerserver.message.Message;
 import com.example.vchatmessengerserver.message.MessageRepository;
@@ -42,7 +45,16 @@ public class GroupService {
     @Autowired
     MessageGateway messageGateway;
 
+    @Autowired
+    private AvatarService avatarService;
+
     public Group create(User owner, CreateGroupDto createGroupDto) {
+        if (
+                createGroupDto.getAvatarDTO().getAvatarType() != 1 &&
+                createGroupDto.getAvatarDTO().getAvatarType() != 2
+        ) {
+            throw new IncorrectDataException();
+        }
         if (!userService.exists(owner)) {
             throw new UserNotFoundException();
         }
@@ -56,16 +68,15 @@ public class GroupService {
         if (!members.contains(owner)) {
             members.add(owner);
         }
-        if (createGroupDto.getTypeOfImage() != 1 && createGroupDto.getTypeOfImage() != 2) {
-            throw new IncorrectDataException();
-        }
         Group group = new Group();
         group.setName(createGroupDto.getName());
         group.setType(1);
-        group.setImageData(createGroupDto.getImageData());
+
+        Avatar groupAvatar = avatarService.createAvatar(createGroupDto.getAvatarDTO());
+        group.setAvatar(groupAvatar);
+
         group.setOwner(owner);
         group.setCreationDate(ZonedDateTime.now());
-        group.setTypeOfImage(createGroupDto.getTypeOfImage());
         group.setMembers(members);
         group.setUnreadMessagesCount(createGroupDto.getUnreadMessagesCount());
         Group groupToReturn = groupRepository.saveAndFlush(group);
@@ -185,42 +196,38 @@ public class GroupService {
         }
     }
 
-    public Group editTypeOfImage(User user, Long groupId, Integer newTypeOfImage) {
+    public Group changeAvatar(User user, Long groupId, AvatarDTO newAvatarDTO) {
         Group group = getById(groupId);
         if (group.getOwner().equals(user)) {
-            if (newTypeOfImage == 1 || newTypeOfImage == 2) {
-                group.setTypeOfImage(newTypeOfImage);
-                return groupRepository.saveAndFlush(group);
-            } else {
+            if (newAvatarDTO.getAvatarType() != 1 && newAvatarDTO.getAvatarType() != 2) {
                 throw new IncorrectDataException();
             }
-        } else {
-            throw new NoRightsException();
-        }
-    }
-
-    public Group editImage(User user, Long groupId, String imageData) {
-        Group group = getById(groupId);
-        if (group.getOwner().equals(user)) {
-            group.setImageData(imageData);
+            Avatar newAvatar = avatarService.createAvatar(newAvatarDTO);
+            group.setAvatar(newAvatar);
             return groupRepository.saveAndFlush(group);
         } else {
             throw new NoRightsException();
         }
     }
 
-    public Group editAll(User user, Long groupId, String newName, Integer newTypeOfImage, String newImageData) {
+    public Group editAll(
+            User user,
+            Long groupId,
+            String newName,
+            AvatarDTO newAvatarDTO
+    ) {
         Group group = getById(groupId);
-        if (group.getOwner().equals(user)) {
-            group.setName(newName);
-            if (newTypeOfImage == 1 || newTypeOfImage == 2) {
-                group.setTypeOfImage(newTypeOfImage);
-            } else {throw new IncorrectDataException();}
-            group.setImageData(newImageData);
-            return groupRepository.saveAndFlush(group);
-        } else {
+        if (!group.getOwner().equals(user)) {
             throw new NoRightsException();
         }
+        if (newAvatarDTO.getAvatarType() != 1 && newAvatarDTO.getAvatarType() != 2) {
+            throw new IncorrectDataException();
+        }
+        Avatar newAvatar = avatarService.createAvatar(newAvatarDTO);
+
+        group.setName(newName);
+        group.setAvatar(newAvatar);
+        return groupRepository.saveAndFlush(group);
     }
 
     public boolean canDeleteMessage(User user, Message message) {

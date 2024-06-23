@@ -1,16 +1,14 @@
 package com.example.vchatmessengerserver.group;
 
 import com.example.vchatmessengerserver.auth.Auth;
-import com.example.vchatmessengerserver.message.Message;
+import com.example.vchatmessengerserver.files.avatar.AvatarDTO;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/group")
@@ -39,30 +37,6 @@ public class GroupController {
     public ResponseEntity<Group> editName(Authentication authentication, Long groupId, String newName) {
         return ResponseEntity.ok(
                 groupService.editName(Auth.getUser(authentication), groupId, newName)
-        );
-    }
-
-    @PutMapping(value = "/edit_type_of_image", name = "Edit type of image of the group with transferred id")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> editTypeOfImage(Authentication authentication, Long groupId, Integer newTypeOfImage) {
-        return ResponseEntity.ok(
-                groupService.editTypeOfImage(Auth.getUser(authentication), groupId, newTypeOfImage)
-        );
-    }
-
-    @PutMapping(value = "/edit_image", name = "Edit image of the group with transferred id")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> editImage(Authentication authentication, Long groupId, String imageData) {
-        return ResponseEntity.ok(
-                groupService.editImage(Auth.getUser(authentication), groupId, imageData)
-        );
-    }
-
-    @PutMapping(value = "/edit_all", name = "Edit all the params of the group")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Group> editAll(Authentication authentication, Long groupId, String newName, Integer newTypeOfImage, String newImageData) {
-        return ResponseEntity.ok(
-                groupService.editAll(Auth.getUser(authentication), groupId, newName, newTypeOfImage, newImageData)
         );
     }
 
@@ -95,6 +69,31 @@ public class GroupController {
     public ResponseEntity<Group> create(Authentication authentication, @RequestBody CreateGroupDto dto) {
         return ResponseEntity.ok(
                 groupService.create(Auth.getUser(authentication), dto)
+        );
+    }
+
+    @PostMapping(value = "/edit_avatar", name = "Edit avatar of the group with transferred id")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<Group> editAvatar(
+            Authentication authentication,
+            Long groupId,
+            @RequestBody AvatarDTO newAvatarDTO
+    ) {
+        return ResponseEntity.ok(
+                groupService.changeAvatar(Auth.getUser(authentication), groupId, newAvatarDTO)
+        );
+    }
+
+    @PostMapping(value = "/edit_all", name = "Edit all the params of the group")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<Group> editAll(
+            Authentication authentication,
+            Long groupId,
+            String newName,
+            @RequestBody AvatarDTO newAvatarDTO
+    ) {
+        return ResponseEntity.ok(
+                groupService.editAll(Auth.getUser(authentication), groupId, newName, newAvatarDTO)
         );
     }
 

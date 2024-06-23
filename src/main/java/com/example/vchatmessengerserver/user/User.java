@@ -1,6 +1,6 @@
 package com.example.vchatmessengerserver.user;
 
-import com.example.vchatmessengerserver.files.avatar.AvatarDto;
+import com.example.vchatmessengerserver.files.avatar.Avatar;
 import com.example.vchatmessengerserver.group.Group;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -48,7 +48,7 @@ public class User {
     private List<String> secretKey = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.EAGER)
-    private AvatarDto avatar;
+    private Avatar avatar;
 
     @Override
     public boolean equals(Object obj) {

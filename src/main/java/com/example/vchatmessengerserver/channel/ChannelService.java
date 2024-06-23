@@ -1,6 +1,9 @@
 package com.example.vchatmessengerserver.channel;
 
 import com.example.vchatmessengerserver.exceptions.*;
+import com.example.vchatmessengerserver.files.avatar.Avatar;
+import com.example.vchatmessengerserver.files.avatar.AvatarDTO;
+import com.example.vchatmessengerserver.files.avatar.AvatarService;
 import com.example.vchatmessengerserver.gateway.MessageGateway;
 import com.example.vchatmessengerserver.group.Group;
 import com.example.vchatmessengerserver.message.Message;
@@ -46,9 +49,18 @@ public class ChannelService {
     @Autowired
     MessageGateway messageGateway;
 
+    @Autowired
+    private AvatarService avatarService;
+
     public Channel create(User owner, CreateChannelDto createChannelDto) {
         if (nicknameService.checkForChannel(createChannelDto.getNickname()) != ok) {
             throw new IncorrectNicknameException();
+        }
+        if (
+                createChannelDto.getAvatarDTO().getAvatarType() != 1 &&
+                createChannelDto.getAvatarDTO().getAvatarType() != 2
+        ) {
+            throw new IncorrectDataException();
         }
         if (!userService.exists(owner)) {
             throw new UserNotFoundException();
@@ -63,17 +75,16 @@ public class ChannelService {
         if (!members.contains(owner)) {
             members.add(owner);
         }
-        if (createChannelDto.getTypeOfImage() != 1 && createChannelDto.getTypeOfImage() != 2) {
-            throw new IncorrectDataException();
-        }
         Channel channel = new Channel();
         channel.setName(createChannelDto.getName());
         channel.setNickname(createChannelDto.getNickname().toLowerCase().strip());
         channel.setType(2);
-        channel.setImageData(createChannelDto.getImageData());
+
+        Avatar channelAvatar = avatarService.createAvatar(createChannelDto.getAvatarDTO());
+        channel.setAvatar(channelAvatar);
+
         channel.setOwner(owner);
         channel.setCreationDate(ZonedDateTime.now());
-        channel.setTypeOfImage(createChannelDto.getTypeOfImage());
         channel.setMessages(new ArrayList<>());
         channel.setMembers(members);
         channel.setUnreadMessagesCount(createChannelDto.getUnreadMessagesCount());
@@ -96,8 +107,7 @@ public class ChannelService {
         if (channelObject.isPresent()) {
             Channel channel = channelObject.get();
             channel.setName(group.getName());
-            channel.setTypeOfImage(group.getTypeOfImage());
-            channel.setImageData(group.getImageData());
+            channel.setAvatar(group.getAvatar());
             channel.setOwner(group.getOwner());
             channel.setMessages(group.getMessages());
             channel.setMembers(group.getMembers());
@@ -191,46 +201,43 @@ public class ChannelService {
         }
     }
 
-    public Channel editTypeOfImage(User user, Long channelId, Integer newTypeOfImage) {
+    public Channel editAvatar(User user, Long channelId, AvatarDTO newAvatarDTO) {
         Channel channel = getById(channelId);
         if (channel.getOwner().equals(user)) {
-            if (newTypeOfImage == 1 || newTypeOfImage == 2) {
-                channel.setTypeOfImage(newTypeOfImage);
-                return channelRepository.saveAndFlush(channel);
-            } else {
+            if (newAvatarDTO.getAvatarType() != 1 && newAvatarDTO.getAvatarType() != 2) {
                 throw new IncorrectDataException();
             }
-        } else {
-            throw new NoRightsException();
-        }
-    }
-
-    public Channel editImage(User user, Long channelId, String imageData) {
-        Channel channel = getById(channelId);
-        if (channel.getOwner().equals(user)) {
-            channel.setImageData(imageData);
+            Avatar newAvatar = avatarService.createAvatar(newAvatarDTO);
+            channel.setAvatar(newAvatar);
             return channelRepository.saveAndFlush(channel);
         } else {
             throw new NoRightsException();
         }
     }
 
-    public Channel editAll(User user, Long channelId, String newName, String newNickname, Integer newTypeOfImage, String newImageData) {
+    public Channel editAll(
+            User user,
+            Long channelId,
+            String newName,
+            String newNickname,
+            AvatarDTO newAvatarDTO
+    ) {
         Channel channel = getById(channelId);
+        if (!channel.getOwner().equals(user)) {
+            throw new NoRightsException();
+        }
         newNickname = newNickname.toLowerCase().strip();
-        if (channel.getOwner().equals(user)) {
-            channel.setName(newName);
-            if (nicknameService.checkForChannel(newNickname) == 200 || channel.getNickname().equals(newNickname)) {
-                channel.setNickname(newNickname);
-            } else {throw new IncorrectNicknameException();}
-            if (newTypeOfImage == 1 || newTypeOfImage == 2) {
-                channel.setTypeOfImage(newTypeOfImage);
-            } else {throw new IncorrectDataException();}
-            channel.setImageData(newImageData);
-            return channelRepository.saveAndFlush(channel);
-        } else {
-            throw new NoRightsException();
+        if (nicknameService.checkForChannel(newNickname) != 200 && !channel.getNickname().equals(newNickname)) {
+            throw new IncorrectNicknameException();
         }
+        channel.setName(newName);
+        channel.setNickname(newNickname);
+        if (newAvatarDTO.getAvatarType() != 1 && newAvatarDTO.getAvatarType() != 2) {
+            throw new IncorrectDataException();
+        }
+        Avatar newAvatar = avatarService.createAvatar(newAvatarDTO);
+        channel.setAvatar(newAvatar);
+        return channelRepository.saveAndFlush(channel);
     }
 
     public Channel addMessage(User user, Long channelId, Long messageId) {

@@ -57,16 +57,21 @@ public class FilesService {
         return contentType;
     }
 
-    public void checkDirectoryAndCreateIfNotExists(String path) {
+    public void createDirectoryIfNotExists(String path) {
         File file = new File(path);
         if (!file.exists()) {
             file.mkdirs();
         }
     }
 
+    public boolean checkIfFileExists(String filename) {
+        File file = download(filename);
+        return file.exists();
+    }
+
     public void upload(MultipartFile file, String fileName) throws IOException {
         Path path = Paths.get(UPLOAD_DIRECTORY).toAbsolutePath().normalize();
-        checkDirectoryAndCreateIfNotExists(path.toString());
+        createDirectoryIfNotExists(path.toString());
 
         String imagePath = path + "/" + fileName;
         Files.copy(
@@ -87,7 +92,7 @@ public class FilesService {
 
     public File download(String filename) {
         Path path = Paths.get(UPLOAD_DIRECTORY).toAbsolutePath().normalize();
-        checkDirectoryAndCreateIfNotExists(path.toString());
+        createDirectoryIfNotExists(path.toString());
         return new File(path + "/" + filename);
     }
 

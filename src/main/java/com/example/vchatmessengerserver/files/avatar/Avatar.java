@@ -5,17 +5,21 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity(name = "AVATAR")
-public class AvatarDto {
+public class Avatar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NonNull
     private String avatarFileName;
+    @NonNull
     private Integer avatarType;
-    private Integer avatarBackgroundColor;
+    @NonNull
+    private String avatarBackgroundColor;
 }

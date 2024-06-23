@@ -1,14 +1,15 @@
 package com.example.vchatmessengerserver.gateway;
 
 import com.corundumstudio.socketio.SocketIOClient;
+import com.example.vchatmessengerserver.files.avatar.Avatar;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MessageGateway {
-    public void notifyUserAboutNewMessage(Long userId, String messageContent, Long chatId, Integer chatType, String chatName, String imageData, String senderName) {
+    public void notifyUserAboutNewMessage(Long userId, String messageContent, Long chatId, Integer chatType, String chatName, Avatar avatar, String senderName) {
         SocketIOClient client = SessionManager.getSession(userId);
         if (client != null) {
-            client.sendEvent("newMessage", userId, messageContent, chatId, chatType, chatName, imageData, senderName);
+            client.sendEvent("newMessage", userId, messageContent, chatId, chatType, chatName, avatar, senderName);
         }
     }
 

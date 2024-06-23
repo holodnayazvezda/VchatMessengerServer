@@ -2,7 +2,9 @@ package com.example.vchatmessengerserver.user;
 
 import com.example.vchatmessengerserver.channel.ChannelService;
 import com.example.vchatmessengerserver.exceptions.*;
-import com.example.vchatmessengerserver.files.avatar.AvatarDto;
+import com.example.vchatmessengerserver.files.avatar.Avatar;
+import com.example.vchatmessengerserver.files.avatar.AvatarDTO;
+import com.example.vchatmessengerserver.files.avatar.AvatarService;
 import com.example.vchatmessengerserver.group.Group;
 import com.example.vchatmessengerserver.group.GroupService;
 import com.example.vchatmessengerserver.message.Message;
@@ -41,13 +43,16 @@ public class UserService {
     @Autowired
     MessageService messageService;
 
-    public List<String> create(CreateUserDto createUserDto) {
+    @Autowired
+    AvatarService avatarService;
+
+    public List<String> create(CreateUserDTO createUserDto) {
         if (nicknameService.checkForUser(createUserDto.getNickname()) != ok) {
             throw new IncorrectNicknameException();
         } else if (checkCorrectness(createUserDto.getPassword()) != ok) {
             throw new IncorrectPasswordException();
-        } else if (createUserDto.getAvatar().getAvatarType() != 1 &&
-                   createUserDto.getAvatar().getAvatarType() != 2
+        } else if (createUserDto.getAvatarDTO().getAvatarType() != 1 &&
+                   createUserDto.getAvatarDTO().getAvatarType() != 2
         ) {
             throw new IncorrectDataException();
         } else {
@@ -55,7 +60,10 @@ public class UserService {
             user.setName(createUserDto.getName());
             user.setNickname(createUserDto.getNickname().toLowerCase().strip());
             user.setPassword(passwordEncoder.encode(createUserDto.getPassword()));
-            user.setAvatar(createUserDto.getAvatar());
+
+            Avatar usersAvatar = avatarService.createAvatar(createUserDto.getAvatarDTO());
+            user.setAvatar(usersAvatar);
+
             user.setChats(new ArrayList<>());
             user.setSecretKey(generateSecretKey());
             User savedUser = userRepository.saveAndFlush(user);
@@ -216,10 +224,11 @@ public class UserService {
         }
     }
 
-    public void changeImage(Long userId, AvatarDto newAvatar) {
-        if (newAvatar.getAvatarType() != 1 && newAvatar.getAvatarType() != 2) {
+    public void changeAvatar(Long userId, AvatarDTO newAvatarDTO) {
+        if (newAvatarDTO.getAvatarType() != 1 && newAvatarDTO.getAvatarType() != 2) {
             throw new IncorrectDataException();
         }
+        Avatar newAvatar = avatarService.createAvatar(newAvatarDTO);
         User user = get(userId);
         user.setAvatar(newAvatar);
         userRepository.saveAndFlush(user);

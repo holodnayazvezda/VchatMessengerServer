@@ -1,10 +1,8 @@
 package com.example.vchatmessengerserver.group;
 
-import com.example.vchatmessengerserver.message.Message;
-import com.example.vchatmessengerserver.user.User;
+import com.example.vchatmessengerserver.files.avatar.AvatarDTO;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.SecondaryRow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +14,7 @@ public class CreateGroupDto {
 
     private Long unreadMessagesCount;
 
-    private Integer typeOfImage;
-
     private List<Long> membersIds = new ArrayList<>();
 
-    private String imageData;
+    private AvatarDTO avatarDTO;
 }

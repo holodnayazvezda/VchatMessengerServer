@@ -2,7 +2,6 @@ package com.example.vchatmessengerserver.message;
 
 import com.example.vchatmessengerserver.channel.ChannelRepository;
 import com.example.vchatmessengerserver.channel.ChannelService;
-import com.example.vchatmessengerserver.exceptions.ChatNotFoundException;
 import com.example.vchatmessengerserver.exceptions.MessageNotFoundException;
 import com.example.vchatmessengerserver.exceptions.NoRightsException;
 import com.example.vchatmessengerserver.exceptions.UserNotFoundException;
@@ -76,7 +75,7 @@ public class MessageService {
             channelService.addMessage(user, messageToReturn.getMessageChat().getId(), messageToReturn.getId());
         }
         for (User member: groupService.getChatById(message.getMessageChat().getId()).getMembers()) {
-            messageGateway.notifyUserAboutNewMessage(member.getId(), messageToReturn.getContent(), messageToReturn.getMessageChat().getId(), chat.getType(), chat.getName(), chat.getImageData(), userService.get(messageToReturn.getOwner().getId()).getName());
+            messageGateway.notifyUserAboutNewMessage(member.getId(), messageToReturn.getContent(), messageToReturn.getMessageChat().getId(), chat.getType(), chat.getName(), chat.getAvatar(), userService.get(messageToReturn.getOwner().getId()).getName());
         }
         return messageToReturn;
     }

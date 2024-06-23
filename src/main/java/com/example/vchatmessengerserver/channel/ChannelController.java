@@ -1,6 +1,7 @@
 package com.example.vchatmessengerserver.channel;
 
 import com.example.vchatmessengerserver.auth.Auth;
+import com.example.vchatmessengerserver.files.avatar.AvatarDTO;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -45,30 +46,6 @@ public class ChannelController {
         );
     }
 
-    @PutMapping(value = "/edit_type_of_image", name = "Edit type of image of the channel with transferred id")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Channel> editTypeOfImage(Authentication authentication, Long channelId, Integer newTypeOfImage) {
-        return ResponseEntity.ok(
-                channelService.editTypeOfImage(Auth.getUser(authentication), channelId, newTypeOfImage)
-        );
-    }
-
-    @PutMapping(value = "/edit_image", name = "Edit image of the channel with transferred id")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Channel> editImage(Authentication authentication, Long channelId, String imageData) {
-        return ResponseEntity.ok(
-                channelService.editImage(Auth.getUser(authentication), channelId, imageData)
-        );
-    }
-
-    @PutMapping(value = "/edit_all", name = "Edit all the params of the group")
-    @SecurityRequirement(name = "basicAuth")
-    public ResponseEntity<Channel> editAll(Authentication authentication, Long channelId, String newName, String newNickname, Integer newTypeOfImage, String newImageData) {
-        return ResponseEntity.ok(
-                channelService.editAll(Auth.getUser(authentication), channelId, newName, newNickname, newTypeOfImage, newImageData)
-        );
-    }
-
     @PutMapping(value = "/add_message", name = "Add message with transferred id to channel with transferred id")
     @SecurityRequirement(name = "basicAuth")
     public ResponseEntity<Channel> addMessage(Authentication authentication, Long channelId, Long messageId) {
@@ -90,6 +67,32 @@ public class ChannelController {
     public ResponseEntity<Channel> create(Authentication authentication, @RequestBody CreateChannelDto dto) {
         Channel channel = channelService.create(Auth.getUser(authentication), dto);
         return ResponseEntity.ok(channel);
+    }
+
+    @PostMapping(value = "/edit_avatar", name = "Edit avatar of the channel with transferred id")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<Channel> editAvatar(
+            Authentication authentication,
+            Long channelId,
+            @RequestBody AvatarDTO newAvatarDTO
+    ) {
+        return ResponseEntity.ok(
+                channelService.editAvatar(Auth.getUser(authentication), channelId, newAvatarDTO)
+        );
+    }
+
+    @PostMapping(value = "/edit_all", name = "Edit all the params of the group")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<Channel> editAll(
+            Authentication authentication,
+            Long channelId,
+            String newName,
+            String newNickname,
+            @RequestBody AvatarDTO newAvatarDTO
+    ) {
+        return ResponseEntity.ok(
+                channelService.editAll(Auth.getUser(authentication), channelId, newName, newNickname, newAvatarDTO)
+        );
     }
 
     @GetMapping(value = "/get_by_id", name = "Gte channel by transferred id")

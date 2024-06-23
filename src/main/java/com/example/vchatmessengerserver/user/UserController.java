@@ -2,7 +2,7 @@ package com.example.vchatmessengerserver.user;
 
 
 import com.example.vchatmessengerserver.auth.Auth;
-import com.example.vchatmessengerserver.files.avatar.AvatarDto;
+import com.example.vchatmessengerserver.files.avatar.AvatarDTO;
 import com.example.vchatmessengerserver.group.Group;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,16 +66,16 @@ public class UserController {
     }
 
     @PostMapping(value = "/create")
-    public ResponseEntity<List<String>> create(@RequestBody CreateUserDto createUserDto) {
+    public ResponseEntity<List<String>> create(@RequestBody CreateUserDTO createUserDto) {
         return ResponseEntity.ok(
                 userService.create(createUserDto)
         );
     }
 
-    @PostMapping(value = "/change_image")
+    @PostMapping(value = "/change_avatar")
     @SecurityRequirement(name = "basicAuth")
-    public void changeImage(Authentication authentication, @RequestBody AvatarDto newAvatar) {
-        userService.changeImage(Auth.getUser(authentication).getId(), newAvatar);
+    public void changeAvatar(Authentication authentication, @RequestBody AvatarDTO newAvatarDTO) {
+        userService.changeAvatar(Auth.getUser(authentication).getId(), newAvatarDTO);
     }
 
     @PostMapping(value = "/can_write", name = "Check if user can write to chat with transferred id")
