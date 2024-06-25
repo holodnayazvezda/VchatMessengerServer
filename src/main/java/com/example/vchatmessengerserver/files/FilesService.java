@@ -93,7 +93,7 @@ public class FilesService {
 
     public String uploadAvatar(MultipartFile file) throws IOException {
         String avatarFilename = avatarService.getAvatarFileName(file);
-        upload(file, avatarService.getAvatarFileName(file));
+        upload(file, avatarFilename);
         return avatarFilename;
     }
 
