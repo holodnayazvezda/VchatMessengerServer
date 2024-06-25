@@ -30,8 +30,19 @@ public class AvatarService {
             "jpg", "jpeg", "png", "apng", "bmp", "webp"
     );
 
+    public boolean isColorCorrect(String hexString) {
+        try {
+            Long.parseLong(hexString.substring(2), 16);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     public Avatar createAvatar(AvatarDTO avatarDto) {
-        if (filesService.checkIfFileExists(avatarDto.getAvatarFileName())) {
+        boolean fileExists = filesService.checkIfFileExists(avatarDto.getAvatarFileName());
+        boolean colorCorrect = isColorCorrect(avatarDto.getAvatarBackgroundColor());
+        if (fileExists || colorCorrect) {
             Avatar avatar = new Avatar();
             avatar.setAvatarFileName(avatarDto.getAvatarFileName());
             avatar.setAvatarType(avatarDto.getAvatarType());

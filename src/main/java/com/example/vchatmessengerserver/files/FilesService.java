@@ -73,7 +73,7 @@ public class FilesService {
 
     public boolean checkIfFileExists(String filename) {
         File file = download(filename);
-        return file.exists();
+        return file.exists() && file.isFile();
     }
 
     public void upload(MultipartFile file, String fileName) throws IOException {
