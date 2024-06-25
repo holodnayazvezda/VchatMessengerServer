@@ -22,7 +22,14 @@ public class FilesService {
     @Autowired
     AvatarService avatarService;
 
-    public static String UPLOAD_DIRECTORY = System.getProperty("user.dir") + "/uploads/";
+    public static String getUploadDirectory() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return System.getProperty("user.dir") + "/uploads/";
+        } else {
+            return "/root/VchatMessengerServer/uploads/";
+        }
+    }
 
     private String getContentTypeByFileExtension(Path path) throws IOException {
         String contentType = Files.probeContentType(path);
@@ -70,7 +77,7 @@ public class FilesService {
     }
 
     public void upload(MultipartFile file, String fileName) throws IOException {
-        Path path = Paths.get(UPLOAD_DIRECTORY).toAbsolutePath().normalize();
+        Path path = Paths.get(getUploadDirectory()).toAbsolutePath().normalize();
         createDirectoryIfNotExists(path.toString());
 
         String imagePath = path + "/" + fileName;
@@ -91,7 +98,7 @@ public class FilesService {
     }
 
     public File download(String filename) {
-        Path path = Paths.get(UPLOAD_DIRECTORY).toAbsolutePath().normalize();
+        Path path = Paths.get(getUploadDirectory()).toAbsolutePath().normalize();
         createDirectoryIfNotExists(path.toString());
         return new File(path + "/" + filename);
     }
